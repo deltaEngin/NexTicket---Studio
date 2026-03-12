@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>NexTicket · Générateur de tickets QR code</title>
+    <!-- Manifest PWA -->
+    <link rel="manifest" href="./manifest.json">
+    <!-- iOS meta tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="NexTicket">
+    <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Polices Google : Poppins pour le système, Montserrat pour le ticket -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- JSZip & FileSaver -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <!-- Confetti animation -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
+    <style>
+        /* ===== VARIABLES ===== */
+        :root {
+            --primary: #0a1f44;
+            --primary-light: #1e3a6f;
+            --primary-dark: #05102b;
+            --accent: #2d9cdb;
+            --success: #27ae60;
+            --warning: #e67e22;
+            --danger: #c0392b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --dark: #0f172a;
+            --white: #ffffff;
+            --shadow-sm: 0 2px 8px rgba(10,31,68,0.08);
+            --shadow-md: 0 8px 24px rgba(10,31,68,0.12);
+            --shadow-lg: 0 16px 40px rgba(10,31,68,0.16);
+            --radius: 8px;
+            --transition: 0.25s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(145deg, #eef2f6 0%, #d9e2ec 100%);
+            min-height: 100vh;
+            color: var(--dark);
+        }
+
+        /* ===== DASHBOARD LAYOUT ===== */
+        .dashboard { display: flex; min-height: 100vh; position: relative; }
+        .sidebar { width: 400px; background: var(--white); backdrop-filter: blur(10px); box-shadow: var(--shadow-md); padding: 32px 24px; transition: transform var(--transition); position: fixed; height: 100vh; overflow-y: auto; z-index: 1000; border-right: 1px solid rgba(10,31,68,0.1); }
+        .logo { text-align: center; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 1px solid rgba(10,31,68,0.1); }
+        .logo i { font-size: 48px; color: var(--primary); background: rgba(10,31,68,0.05); padding: 12px; border-radius: 16px; margin-bottom: 12px; }
+        .logo h1 { font-size: 24px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+        .logo p { font-size: 13px; color: var(--gray); font-weight: 500; }
+        .nav-menu { list-style: none; margin: 24px 0; }
+        .nav-item { margin-bottom: 8px; }
+        .nav-link { display: flex; align-items: center; padding: 14px 18px; color: var(--gray); text-decoration: none; border-radius: var(--radius); font-weight: 500; font-size: 16px; transition: var(--transition); cursor: pointer; }
+        .nav-link i { margin-right: 14px; font-size: 20px; width: 24px; color: var(--primary); }
+        .nav-link:hover { background: rgba(10,31,68,0.05); color: var(--primary); }
+        .nav-link.active { background: var(--primary); color: white; }
+        .nav-link.active i { color: white; }
+        .download-modes { margin-top: 20px; padding: 20px 16px; background: rgba(10,31,68,0.02); border-radius: var(--radius); border: 1px solid rgba(10,31,68,0.08); }
+        .download-modes h3 { font-size: 16px; font-weight: 600; color: var(--dark); margin-bottom: 16px; display: flex; align-items: center; }
+        .download-modes h3 i { margin-right: 8px; color: var(--primary); }
+        .mode-btn { width: 100%; padding: 14px 16px; background: white; border: 1px solid rgba(10,31,68,0.15); border-radius: var(--radius); cursor: pointer; font-weight: 500; font-size: 15px; display: flex; align-items: center; gap: 12px; transition: var(--transition); margin-bottom: 10px; }
+        .mode-btn i { font-size: 18px; width: 24px; }
+        .mode-btn:hover { border-color: var(--primary); background: rgba(10,31,68,0.02); }
+        .mode-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+        .mode-description { font-size: 13px; color: var(--gray); margin-bottom: 12px; padding-left: 36px; line-height: 1.4; }
+        .batch-options { margin-top: 16px; background: white; border-radius: var(--radius); padding: 16px; display: none; border: 1px solid rgba(10,31,68,0.1); }
+        .batch-options.active { display: block; animation: slideDown 0.3s; }
+        .batch-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+        .batch-btn { padding: 12px; background: var(--light); border: 1px solid #e2e8f0; border-radius: var(--radius); cursor: pointer; font-weight: 500; font-size: 14px; transition: var(--transition); }
+        .batch-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        .batch-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .zip-info { font-size: 12px; color: var(--success); display: flex; align-items: center; gap: 6px; }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content { flex: 1; margin-left: 400px; padding: 30px; transition: margin-left var(--transition); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 1px solid rgba(10,31,68,0.1); }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .mobile-menu-toggle { display: none; background: var(--primary); color: white; border: none; width: 44px; height: 44px; border-radius: var(--radius); font-size: 22px; cursor: pointer; }
+        .header h2 { font-size: 28px; font-weight: 700; color: var(--primary); }
+
+        /* ===== STATS ===== */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: var(--white); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); text-align: center; transition: var(--transition); border: 1px solid rgba(10,31,68,0.05); }
+        .stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        .stat-card i { font-size: 32px; color: var(--primary); background: rgba(10,31,68,0.05); padding: 12px; border-radius: 12px; margin-bottom: 12px; }
+        .stat-card h3 { font-size: 28px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+        .stat-card p { color: var(--gray); font-weight: 500; font-size: 14px; }
+
+        /* ===== PANELS ===== */
+        .content-area { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; }
+
+        /* Nouvelle section pour les onglets */
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        .panel { background: var(--white); border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow-sm); border: 1px solid rgba(10,31,68,0.05); margin-bottom: 30px; }
+        .panel-title { display: flex; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid rgba(10,31,68,0.1); }
+        .panel-title i { font-size: 22px; color: var(--primary); margin-right: 12px; }
+        .panel-title h3 { font-size: 20px; font-weight: 600; color: var(--dark); }
+
+        /* ===== FORMULAIRES ===== */
+        .ticket-fields { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px; }
+        .ticket-fields .full-width { grid-column: span 2; }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: flex; align-items: center; font-weight: 500; font-size: 14px; margin-bottom: 6px; color: var(--dark); }
+        .form-label i { margin-right: 6px; color: var(--primary); font-size: 15px; }
+        .form-control, .form-select { width: 100%; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: var(--radius); font-size: 15px; transition: var(--transition); font-family: 'Poppins', sans-serif; }
+        .form-control:focus, .form-select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(10,31,68,0.1); }
+        .form-select { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230a1f44' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>"); background-repeat: no-repeat; background-position: right 16px center; background-size: 14px; }
+        .phone-display { background: #f1f5f9; padding: 14px 16px; border-radius: var(--radius); border-left: 4px solid var(--primary); font-weight: 500; display: flex; align-items: center; gap: 10px; font-size: 15px; }
+        .file-upload { border: 2px dashed #cbd5e1; border-radius: var(--radius); padding: 40px 20px; text-align: center; cursor: pointer; transition: var(--transition); background: #f8fafc; }
+        .file-upload:hover { border-color: var(--primary); background: rgba(10,31,68,0.02); }
+        .file-upload i { font-size: 56px; color: var(--primary); margin-bottom: 12px; }
+        .file-list { margin-top: 16px; max-height: 200px; overflow-y: auto; }
+        .file-item { display: flex; align-items: center; justify-content: space-between; background: #f1f5f9; padding: 12px 16px; border-radius: var(--radius); margin-bottom: 8px; }
+        .file-name i { color: var(--primary); margin-right: 8px; }
+        .extracted-id { background: var(--primary); color: white; padding: 4px 12px; border-radius: 30px; font-size: 12px; font-weight: 500; }
+        .progress-container { margin-top: 16px; background: #e2e8f0; border-radius: 30px; height: 10px; overflow: hidden; display: none; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); width: 0%; transition: width 0.3s; }
+        .progress-text { text-align: center; margin-top: 8px; font-size: 14px; color: var(--gray); }
+        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+        .btn { padding: 16px 20px; border: none; border-radius: var(--radius); font-weight: 600; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: var(--transition); background: var(--primary); color: white; font-family: 'Poppins', sans-serif; }
+        .btn:hover { background: var(--primary-light); }
+        .btn-success { background: var(--success); }
+        .btn-success:hover { background: #219653; }
+        .btn-warning { background: var(--warning); }
+        .btn-warning:hover { background: #d35400; }
+        .btn-danger { background: var(--danger); }
+        .btn-danger:hover { background: #a93226; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .reset-section { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        /* ===== NOUVEAU STYLE TICKET PAYSAGE ===== */
+        .preview-container {
+            background: #f1f5f9;
+            border-radius: var(--radius);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .ticket-card {
+            width: 850px;           /* Largeur fixe pour le paysage */
+            background: white;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            font-family: 'Montserrat', sans-serif;
+            background-size: cover;
+            background-position: center;
+            border-radius: 1px;     /* Coins arrondis */
+        }
+
+        .ticket-card * {
+            font-family: 'Montserrat', sans-serif;
+        }
+        .ticket-pass{
+            text-align: center;
+            font-weight: 700;
+            letter-spacing: 8px;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            margin-left: 6px;         
+        }
+        
+        .ticket-header {
+            background: var(--primary);
+            color: white;
+            text-align: center;
+            font-weight: 700;
+            letter-spacing: 4px;
+            font-size: 16px;
+            text-transform: uppercase;
+        }
+
+        .ticket-body {
+            display: flex;
+            min-height: 280px;        /* Hauteur ajustée */
+        }
+
+        /* ===== PARTIE GAUCHE (Souche) ===== */
+        .ticket-left {
+            flex: 0 0 200px;          /* Largeur fixe */
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;     /* Aligner le contenu à droite (près du trait) */
+            justify-content: flex-start;
+            padding: 15px 20px 15px 30px;  /* Réduction du padding-right pour rapprocher du trait */
+            border-right: 1.8px dashed #2c3e50;  /* Trait de séparation */
+            background: rgba(255,255,255,0.3);
+            backdrop-filter: blur(1px);
+        }
+
+        .qr-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .qr-container img {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            background: white;
+            margin-bottom: 8px;
+        }
+
+        /* Informations de la souche (N°, Série, ID) */
+        .stub-info {
+            width: 100%;
+            text-align: right;         /* Aligné à droite pour être près du trait */
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--dark);
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+        .stub-info div {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+            border-bottom: 1px dotted var(--gray);
+        }
+        .stub-info .label {
+            color: var(--gray);
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+        .stub-info .value {
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* ===== PARTIE DROITE (Client) ===== */
+        .ticket-right {
+            flex: 1;
+            padding: 18px 18px 15px 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: rgba(255,255,255,0.3);
+            backdrop-filter: blur(0.2px);
+            position: relative;
+        }
+
+        /* Mini QR dans la partie droite (agrandi) - positionné en bas à droite */
+        .mini-qr {
+            position: absolute;
+            bottom: 18px;
+            right: 18px;
+            width: 120px;              /* Taille ajustée */
+            height: 120px;
+            background: white;
+            border-radius: 2px;
+        }
+        .mini-qr img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* Nouveau conteneur pour le titre et les numéros */
+        .title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-right: 10px; /* petit espace */
+        }
+
+        .main-title {
+            flex: 1; /* prend l'espace disponible */
+            font-size: 26px;
+            font-weight: 900;
+            color: var(--dark);
+            line-height: 1.2;
+            /* margin-right supprimé */
+        }
+
+        /* Numéro et série dans la partie droite - maintenant dans title-row */
+        .ticket-numbers {
+            display: flex;
+            gap: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #FFFFFF;
+            padding: 4px 8px;
+            border-radius: 30px;
+            /* margin-bottom supprimé */
+            width: fit-content;
+        }
+        .ticket-numbers span {
+            color: var(--primary);
+        }
+
+        .details-list {
+            background: white;
+            border-radius: 8px;
+            padding: 8px 12px;
+            /* margin-top supprimé car plus besoin */
+        }
+
+        .detail-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #12171E;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .label {
+            font-weight: 600;
+            color: var(--gray);
+            text-transform: uppercase;
+            font-size: 11px;
+        }
+        .value {
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 14px;
+        }
+
+        .status-badge-display {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+        .status-badge-display.premium { background: #ffd700; color: #000; }
+        .status-badge-display.standard { background: #6c757d; color: white; }
+        .status-badge-display.vip { background: #9b59b6; color: white; }
+        .status-badge-display.vvip { background: #8B0000; color: white; }
+        .status-badge-display.default { background: var(--primary); color: white; }
+
+        .dates-section {
+            display: flex;
+            gap: 20px;
+            margin-top: 4px;
+            margin-bottom: 50px; /* Espace pour ne pas chevaucher le QR */
+        }
+        .date-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .small-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #5a6f88;
+            text-transform: uppercase;
+        }
+        .date-value {
+            font-weight: 600;
+            color: #0b1f30;
+            font-size: 14px;
+        }
+
+        .id-section {
+            margin-top: 6px;
+        }
+        .id-value {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--dark);
+            line-height: 1.2;
+        }
+
+        .secure-mention {
+            text-align: right;
+            font-size: 9px;
+            letter-spacing: 1px;
+            color: var(--gray);
+            margin-top: auto;
+            margin-right: 140px;
+        }
+
+        /* ===== STYLES POUR LES NOUVEAUX ONGLETS (améliorés) ===== */
+        .stats-cards-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(10,31,68,0.05);
+            margin-bottom: 20px;
+        }
+        .chart-container canvas {
+            max-height: 300px;
+            width: 100% !important;
+        }
+
+        .storage-info {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        .storage-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(10,31,68,0.05);
+        }
+        .storage-card h4 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .storage-card p {
+            font-size: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .storage-card i {
+            color: var(--primary);
+            width: 24px;
+            text-align: center;
+        }
+        .contact-info {
+            background: var(--light);
+            border-radius: var(--radius);
+            padding: 24px;
+            border-left: 4px solid var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+        .contact-info h4 {
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+        .contact-info p {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(10,31,68,0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+        }
+        .modal i {
+            font-size: 56px;
+            color: var(--danger);
+            margin-bottom: 16px;
+        }
+        .modal h3 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .modal p {
+            color: var(--gray);
+            margin-bottom: 24px;
+            font-size: 16px;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .modal-actions button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+        }
+        .confirm-btn {
+            background: var(--danger);
+            color: white;
+        }
+        .cancel-btn {
+            background: #e2e8f0;
+            color: var(--dark);
+        }
+
+        /* ===== BATCH RESULTS FLOATING PANEL ===== */
+        .batch-results-panel {
+            position: fixed;
+            bottom: 20px; right: 20px;
+            width: 380px;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--primary);
+            display: none;
+            z-index: 1500;
+        }
+        .batch-results-header {
+            background: var(--primary);
+            color: white;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .batch-results-content {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 12px;
+        }
+        .batch-result-item {
+            display: flex;
+            justify-content: space-between;
+            background: #f1f5f9;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            border-radius: var(--radius);
+        }
+        .batch-result-id {
+            background: var(--primary);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 12px;
+        }
+        .show-results-btn {
+            position: fixed;
+            bottom: 80px; right: 20px;
+            width: 56px; height: 56px;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1400;
+        }
+
+        /* ===== CONFETTIS EN PREMIER PLAN ===== */
+        canvas[style*="position: fixed"] {
+            z-index: 9999 !important;
+            pointer-events: none !important;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
+            .content-area { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(-100%); transition: transform var(--transition); width: 90%; max-width: 450px; }
+            .sidebar.mobile-visible { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; }
+            .mobile-menu-toggle { display: block; }
+            .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 999; display: none; }
+            .sidebar-overlay.active { display: block; }
+            .sidebar .mode-btn { font-size: 16px; word-break: break-word; }
+            .sidebar .mode-description { padding-left: 36px; font-size: 14px; }
+            .batch-buttons { grid-template-columns: repeat(2, 1fr); }
+            .batch-btn { padding: 14px; font-size: 15px; }
+            .stats-cards-row { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .stats-advanced { grid-template-columns: 1fr; }
+            .reset-section { grid-template-columns: 1fr; }
+            .ticket-fields { grid-template-columns: 1fr; }
+            .ticket-fields .full-width { grid-column: span 1; }
+            .ticket-card { width: 100%; max-width: 500px; }  /* Adaptation mobile */
+            .ticket-body { flex-direction: column; }
+            .ticket-left { border-right: none; border-bottom: 2px dashed #2c3e50; align-items: center; } /* Centrer sur mobile */
+            .stub-info { text-align: center; }
+            .stub-info div { justify-content: center; gap: 10px; }
+        }
+
+        /* Animations */
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fa-spinner { animation: spin 1s linear infinite; }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Overlay pour mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- SIDEBAR (modifiée avec nouveaux onglets) -->
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <i class="fas fa-ticket-alt"></i>
+                <h1>NexTicket</h1>
+                <p>Générateur professionnel</p>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a class="nav-link active" data-tab="dashboard">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Tableau de bord</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-tab="stats">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Statistiques</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-tab="storage">
+                        <i class="fas fa-database"></i>
+                        <span>Stockage</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="download-modes">
+                <h3><i class="fas fa-download"></i> <span>Mode</span></h3>
+                <button class="mode-btn active" id="singleModeBtn">
+                    <i class="fas fa-file-image"></i>
+                    <span>Ticket unique</span>
+                </button>
+                <div class="mode-description"><span>1 ticket à la fois</span></div>
+                <button class="mode-btn" id="batchModeBtn">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Lot multiple</span>
+                </button>
+                <div class="mode-description"><span>Jusqu'à 50 tickets</span></div>
+                <div class="batch-options" id="batchOptions">
+                    <div class="batch-buttons">
+                        <button class="batch-btn" data-limit="10">10</button>
+                        <button class="batch-btn" data-limit="25">25</button>
+                        <button class="batch-btn" data-limit="30">30</button>
+                        <button class="batch-btn active" data-limit="50">50</button>
+                    </div>
+                    <div class="zip-info">
+                        <i class="fas fa-file-archive"></i> ZIP automatique
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content" id="mainContent">
+            <div class="header">
+                <div class="header-left">
+                    <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h2><i class="fas fa-magic"></i> NexTicket · Studio</h2>
+                </div>
+                <!-- Bouton de thème supprimé -->
+            </div>
+
+            <!-- ALERTS (global) -->
+            <div id="alertsContainer"></div>
+
+            <!-- ===== ONGLET TABLEAU DE BORD ===== -->
+            <div id="tab-dashboard" class="tab-content active">
+                <!-- STATS CARDS -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-ticket-alt"></i>
+                        <h3 id="totalProcessed">0</h3>
+                        <p>Tickets générés</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-id-card"></i>
+                        <h3 id="currentId">--</h3>
+                        <p>ID en cours</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-layer-group"></i>
+                        <h3 id="batchSize">--</h3>
+                        <p>Taille lot</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-check-circle"></i>
+                        <h3 id="successRate">100%</h3>
+                        <p>Réussite</p>
+                    </div>
+                </div>
+
+                <!-- Les cartes "Montant total" et "Répartition" ont été supprimées d'ici (maintenant dans l'onglet Statistiques) -->
+
+                <!-- CONTENU PRINCIPAL (configuration + aperçu) -->
+                <div class="content-area">
+                    <!-- PANEL CONFIG -->
+                    <div class="panel">
+                        <div class="panel-title">
+                            <i class="fas fa-sliders-h"></i>
+                            <h3>Configuration</h3>
+                        </div>
+                        <div class="ticket-fields">
+                            <div class="full-width">
+                                <label class="form-label"><i class="fas fa-heading"></i> Événement</label>
+                                <input type="text" id="eventTitle" class="form-control" value="Music Festival">
+                            </div>
+                            <div>
+                                <label class="form-label"><i class="fas fa-calendar-alt"></i> Début</label>
+                                <input type="date" id="startDate" class="form-control" value="2025-06-03">
+                            </div>
+                            <div>
+                                <label class="form-label"><i class="fas fa-calendar-alt"></i> Fin</label>
+                                <input type="date" id="endDate" class="form-control" value="2025-06-03">
+                            </div>
+                            <div>
+                                <label class="form-label"><i class="fas fa-map-marker-alt"></i> Lieu</label>
+                                <input type="text" id="location" class="form-control" value="France, Paris">
+                            </div>
+                            <div>
+                                <label class="form-label"><i class="fas fa-tag"></i> Type</label>
+                                <input type="text" id="eventType" class="form-control" value="Evènement">
+                            </div>
+                            <div>
+                                <label class="form-label"><i class="fas fa-star"></i> Statut</label>
+                                <select id="status" class="form-select">
+                                    <option value="Premium" selected>Premium</option>
+                                    <option value="Standard">Standard</option>
+                                    <option value="VIP">VIP</option>
+                                    <option value="VVIP">VVIP</option>
+                                    <option value="Simple">Simple</option>
+                                </select>
+                            </div>
+                            <div class="full-width">
+                                <label class="form-label"><i class="fas fa-euro-sign"></i> Prix</label>
+                                <input type="text" id="price" class="form-control" value="5000 XOF">
+                            </div>
+                        </div>
+
+                        <!-- Champ Fond supprimé -->
+
+                        <div class="form-group">
+                            <label class="form-label"><i class="fas fa-id-card"></i> ID extrait</label>
+                            <div id="idDisplay" class="phone-display">
+                                <i class="fas fa-sync-alt" style="color:var(--warning);"></i> En attente...
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label"><i class="fas fa-qrcode"></i> QR Codes</label>
+                            <div class="file-upload" id="qrUploadArea">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p id="uploadTitle">Glissez-déposez vos QR codes</p>
+                                <p id="uploadSubtitle" style="font-size:14px;">ou cliquez pour sélectionner</p>
+                                <input type="file" id="qrUpload" accept="image/*" multiple style="display:none;">
+                                <button class="btn" style="max-width:200px; margin:0 auto;"><i class="fas fa-folder-open"></i> Parcourir</button>
+                            </div>
+                            <div id="fileList" class="file-list"></div>
+                            <div class="progress-container" id="progressContainer">
+                                <div class="progress-bar" id="progressBar"></div>
+                            </div>
+                            <div class="progress-text" id="progressText"></div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button id="processBtn" class="btn btn-success" disabled><i class="fas fa-play"></i> Traiter</button>
+                            <button id="downloadAllBtn" class="btn" disabled><i class="fas fa-download"></i> Télécharger</button>
+                        </div>
+
+                        <div class="reset-section">
+                            <button id="resetBtn" class="btn btn-warning"><i class="fas fa-redo-alt"></i> Nouveau</button>
+                            <button id="exportDataBtn" class="btn btn-success"><i class="fas fa-file-export"></i> Exporter</button>
+                            <button id="clearDataBtn" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Effacer tout</button>
+                        </div>
+                    </div>
+
+                    <!-- PANEL APERÇU -->
+                    <div class="panel">
+                        <div class="panel-title">
+                            <i class="fas fa-eye"></i>
+                            <h3>Aperçu</h3>
+                        </div>
+                        <div class="preview-container">
+                            <!-- STRUCTURE TICKET -->
+                            <div class="ticket-card" id="ticketCard">
+                                <div class="ticket-body">
+                                    <!-- PARTIE GAUCHE (SOUCHE) -->
+                                    <div class="ticket-left">
+                                        <div class="qr-container">
+                                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TICKET" alt="QR" id="qrCodeImg">
+                                            <span class="ticket-pass">ticket pass</span>
+                                        </div>
+                                        <!-- Informations souche : N°, Série, ID -->
+                                        <div class="stub-info">
+                                            <div>
+                                                <span class="label">N°</span>
+                                                <span class="value" id="displayTicketNumberLeft">001</span>
+                                            </div>
+                                            <div>
+                                                <span class="label">Série</span>
+                                                <span class="value" id="displaySerialNumberLeft">EX123AB7</span>
+                                            </div>
+                                            <div>
+                                                <span class="label">ID</span>
+                                                <span class="value" id="displayIdLeft">--</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- PARTIE DROITE (CLIENT) -->
+                                    <div class="ticket-right">
+                                        <!-- Mini QR agrandi - maintenant en bas à droite -->
+                                        <div class="mini-qr">
+                                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TICKET" alt="mini QR" id="miniQrCodeImg">
+                                        </div>
+                                        <!-- Nouveau conteneur pour titre et numéros -->
+                                        <div class="title-row">
+                                            <div class="main-title" id="displayTitle">Music Festival</div>
+                                            <div class="ticket-numbers">
+                                                <span>N° <span id="displayTicketNumber">001</span></span>
+                                                <span>Série <span id="displaySerialNumber">EX123AB7</span></span>
+                                            </div>
+                                        </div>
+                                        <div class="details-list">
+                                            <div class="detail-row">
+                                                <span class="label">Type</span>
+                                                <span class="value" id="displayType">Evènement</span>
+                                            </div>
+                                            <div class="detail-row">
+                                                <span class="label">Statut</span>
+                                                <span class="value"><span id="displayStatus" class="status-badge-display default">Premium</span></span>
+                                            </div>
+                                            <div class="detail-row">
+                                                <span class="label">Lieu</span>
+                                                <span class="value" id="displayLocation">France, Paris</span>
+                                            </div>
+                                            <div class="detail-row">
+                                                <span class="label">Prix</span>
+                                                <span class="value" id="displayPrice">5000 XOF</span>
+                                            </div>
+                                        </div>
+                                        <div class="dates-section">
+                                            <div class="date-item">
+                                                <span class="small-label">Début :</span>
+                                                <span class="date-value" id="displayStart">03 Juin 2025</span>
+                                            </div>
+                                            <div class="date-item">
+                                                <span class="small-label">Fin :</span>
+                                                <span class="date-value" id="displayEnd">03 Juin 2025</span>
+                                            </div>
+                                        </div>
+                                        <div class="id-section">
+                                            <span class="small-label">#ID : </span>
+                                            <span class="id-value" id="displayIdBottom"></span>
+                                        </div>
+                                        <div class="secure-mention">BILLET NUMÉRIQUE SÉCURISÉ</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top:20px;">
+                            <label class="form-label"><i class="fas fa-cog"></i> Qualité JPEG</label>
+                            <input type="range" id="qualitySlider" min="0.5" max="1.0" step="0.1" value="0.9">
+                            <div style="display:flex; justify-content:space-between; margin-top:6px;">
+                                <span>Standard</span>
+                                <span id="qualityValue" style="font-weight:600;">90%</span>
+                                <span>Haute</span>
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <button id="previewBtn" class="btn"><i class="fas fa-sync-alt"></i> Actualiser</button>
+                            <button id="downloadSingleBtn" class="btn" disabled><i class="fas fa-file-download"></i> Télécharger</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- INSTRUCTIONS -->
+                <div class="instructions" style="margin-top:30px; background:#f1f5f9; border-radius:var(--radius); padding:24px;">
+                    <h4 style="display:flex; gap:10px; font-size:18px;"><i class="fas fa-info-circle" style="color:var(--primary);"></i> Guide rapide</h4>
+                    <ol style="padding-left:20px; font-size:15px;">
+                        <li>Personnalisez le ticket (titre, dates, lieu, statut, prix).</li>
+                        <li>Choisissez le mode (unique ou lot) dans le menu latéral.</li>
+                        <li>Importez vos QR codes – le nom doit contenir l'ID entre parenthèses.</li>
+                        <li>Cliquez sur <strong>Traiter</strong> pour générer les images.</li>
+                        <li>Téléchargez en ZIP (lot) ou en JPG (unique).</li>
+                        <li>Les statistiques sont automatiquement sauvegardées.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- ===== ONGLET STATISTIQUES ===== -->
+            <div id="tab-stats" class="tab-content">
+                <div class="panel">
+                    <div class="panel-title">
+                        <i class="fas fa-chart-line"></i>
+                        <h3>Statistiques détaillées</h3>
+                    </div>
+                    <div class="stats-cards-row">
+                        <div class="stat-card">
+                            <i class="fas fa-coins"></i>
+                            <h3 id="statsTotalAmount">0 FCFA</h3>
+                            <p>Montant total</p>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-chart-bar"></i>
+                            <h3>Répartition</h3>
+                            <div class="status-breakdown" id="statsStatusBreakdown">
+                                <span>Premium: <span id="statsPremium">0</span></span>
+                                <span>Standard: <span id="statsStandard">0</span></span>
+                                <span>VIP: <span id="statsVip">0</span></span>
+                                <span>Autre: <span id="statsOther">0</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== ONGLET STOCKAGE ===== -->
+            <div id="tab-storage" class="tab-content">
+                <div class="panel">
+                    <div class="panel-title">
+                        <i class="fas fa-database"></i>
+                        <h3>Stockage IndexedDB</h3>
+                    </div>
+                    <div class="storage-info">
+                        <div class="storage-card">
+                            <h4><i class="fas fa-hdd"></i> Espace utilisé</h4>
+                            <p><i class="fas fa-database"></i> <strong id="storageSize">Calcul...</strong></p>
+                            <p><i class="fas fa-ticket-alt"></i> <span id="storageCount">0</span> tickets enregistrés</p>
+                        </div>
+                        <div class="contact-info">
+                            <h4><i class="fas fa-address-card"></i> Profile</h4>
+                            <p><i class="fas fa-user"></i> <strong>NexTicket Solutions</strong></p>
+                            <p><small>Version 1.0</small></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL CONFIRMATION -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal">
+            <i class="fas fa-exclamation-triangle" id="modalIcon"></i>
+            <h3 id="modalTitle">Confirmation</h3>
+            <p id="modalMessage">Voulez-vous vraiment effacer toutes les données ?</p>
+            <div class="modal-actions">
+                <button class="confirm-btn" id="modalConfirm">Confirmer</button>
+                <button class="cancel-btn" id="modalCancel">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import depuis database.js (doit être dans ./js/database.js)
+        import { openDB, saveOperation, getAllOperations, clearAllOperations } from './js/database.js';
+
+        // Récupération des éléments DOM
+        const qrUpload = document.getElementById('qrUpload');
+        const qrUploadArea = document.getElementById('qrUploadArea');
+        const fileList = document.getElementById('fileList');
+        const previewBtn = document.getElementById('previewBtn');
+        const processBtn = document.getElementById('processBtn');
+        const downloadAllBtn = document.getElementById('downloadAllBtn');
+        const downloadSingleBtn = document.getElementById('downloadSingleBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const ticketCard = document.getElementById('ticketCard');
+        const qualitySlider = document.getElementById('qualitySlider');
+        const qualityValue = document.getElementById('qualityValue');
+        const batchButtons = document.querySelectorAll('.batch-btn');
+        const alertsContainer = document.getElementById('alertsContainer');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const singleModeBtn = document.getElementById('singleModeBtn');
+        const batchModeBtn = document.getElementById('batchModeBtn');
+        const batchOptions = document.getElementById('batchOptions');
+        const uploadTitle = document.getElementById('uploadTitle');
+        const uploadSubtitle = document.getElementById('uploadSubtitle');
+        const totalProcessedEl = document.getElementById('totalProcessed');
+        const currentIdEl = document.getElementById('currentId');
+        const batchSizeEl = document.getElementById('batchSize');
+        const successRateEl = document.getElementById('successRate');
+        const idDisplay = document.getElementById('idDisplay');
+        // totalAmountEl, statPremium, statStandard, statVip, statOther ont été supprimés du DOM
+        const eventTitle = document.getElementById('eventTitle');
+        const startDate = document.getElementById('startDate');
+        const endDate = document.getElementById('endDate');
+        const locationInput = document.getElementById('location');
+        const eventType = document.getElementById('eventType');
+        const statusInput = document.getElementById('status');
+        const priceInput = document.getElementById('price');
+        const bgImageInput = null; // plus utilisé
+        const displayTitle = document.getElementById('displayTitle');
+        const displayStart = document.getElementById('displayStart');
+        const displayEnd = document.getElementById('displayEnd');
+        const displayLocation = document.getElementById('displayLocation');
+        const displayType = document.getElementById('displayType');
+        const displayStatus = document.getElementById('displayStatus');
+        const displayPrice = document.getElementById('displayPrice');
+        const displayIdBottom = document.getElementById('displayIdBottom');
+        const qrCodeImg = document.getElementById('qrCodeImg');
+        // Nouveaux éléments pour la partie gauche
+        const displayTicketNumberLeft = document.getElementById('displayTicketNumberLeft');
+        const displaySerialNumberLeft = document.getElementById('displaySerialNumberLeft');
+        const displayIdLeft = document.getElementById('displayIdLeft');
+        // Éléments existants pour la partie droite
+        const miniQrCodeImg = document.getElementById('miniQrCodeImg');
+        const displayTicketNumber = document.getElementById('displayTicketNumber');
+        const displaySerialNumber = document.getElementById('displaySerialNumber');
+
+        // Éléments pour les statistiques
+        const statsTotalAmount = document.getElementById('statsTotalAmount');
+        const statsPremium = document.getElementById('statsPremium');
+        const statsStandard = document.getElementById('statsStandard');
+        const statsVip = document.getElementById('statsVip');
+        const statsOther = document.getElementById('statsOther');
+
+        // Éléments pour le stockage
+        const storageSizeEl = document.getElementById('storageSize');
+        const storageCountEl = document.getElementById('storageCount');
+
+        const exportDataBtn = document.getElementById('exportDataBtn');
+        const clearDataBtn = document.getElementById('clearDataBtn');
+        const modalOverlay = document.getElementById('confirmModal');
+        const modalConfirm = document.getElementById('modalConfirm');
+        const modalCancel = document.getElementById('modalCancel');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalIcon = document.getElementById('modalIcon');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        // Variables globales
+        let qrFiles = [];
+        let processedImages = [];
+        let currentBatchLimit = null;
+        let currentMode = 'single';
+        let batchResults = [];
+        let totalTickets = 0;
+        let totalRevenue = 0;
+        let statusCount = { Premium: 0, Standard: 0, VIP: 0, Autre: 0 };
+        const DEFAULT_BG_IMAGE = './images/ticket_backgroun.jpg'; // chemin par défaut (image de fond du ticket)
+        let chartInstance = null; // pour le graphique
+
+        // ===== FONCTION DE FÊTE (CONFETTIS) =====
+        function celebrate() {
+            const duration = 2 * 1000;
+            const animationEnd = Date.now() + duration;
+            const colors = ['#0a1f44', '#2d9cdb', '#27ae60', '#e67e22', '#9b59b6', '#8B0000'];
+            
+            (function frame() {
+                confetti({
+                    particleCount: 7,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: colors
+                });
+                confetti({
+                    particleCount: 7,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: colors
+                });
+                
+                if (Date.now() < animationEnd) {
+                    requestAnimationFrame(frame);
+                }
+            })();
+        }
+
+        // ===== INITIALISATION DB =====
+        try {
+            await openDB();
+            console.log('DB ouverte');
+        } catch (e) {
+            console.error('Erreur DB', e);
+        }
+
+        // ===== CHARGEMENT STATS =====
+        async function loadStatsFromDB() {
+            try {
+                const ops = await getAllOperations();
+                totalTickets = 0; totalRevenue = 0;
+                statusCount = { Premium: 0, Standard: 0, VIP: 0, Autre: 0 };
+                ops.forEach(op => {
+                    totalTickets += op.count || 0;
+                    totalRevenue += op.totalAmount || 0;
+                    if (op.statusBreakdown) {
+                        statusCount.Premium += op.statusBreakdown.Premium || 0;
+                        statusCount.Standard += op.statusBreakdown.Standard || 0;
+                        statusCount.VIP += op.statusBreakdown.VIP || 0;
+                        statusCount.Autre += op.statusBreakdown.Autre || 0;
+                    }
+                });
+                updateStatsDisplay();
+                updateStorageInfo(ops);
+                updateChart(ops); // met à jour le graphique
+            } catch (e) {
+                console.error('Erreur chargement stats', e);
+            }
+        }
+        await loadStatsFromDB();
+
+        function updateStatsDisplay() {
+            // Mise à jour des éléments du tableau de bord avec vérification
+            if (totalProcessedEl) totalProcessedEl.textContent = totalTickets;
+            // totalAmountEl a été supprimé
+            // Les éléments de répartition ont été supprimés du tableau de bord
+            if (successRateEl) successRateEl.textContent = '100%';
+            
+            // Mise à jour des stats de l'onglet avec vérification
+            if (statsTotalAmount) statsTotalAmount.textContent = totalRevenue.toLocaleString() + ' FCFA';
+            if (statsPremium) statsPremium.textContent = statusCount.Premium;
+            if (statsStandard) statsStandard.textContent = statusCount.Standard;
+            if (statsVip) statsVip.textContent = statusCount.VIP;
+            if (statsOther) statsOther.textContent = statusCount.Autre;
+        }
+
+        // ===== MISE À JOUR INFO STOCKAGE =====
+        function updateStorageInfo(ops) {
+            const json = JSON.stringify(ops);
+            const bytes = new Blob([json]).size;
+            if (storageCountEl) storageCountEl.textContent = ops.length;
+            if (storageSizeEl) storageSizeEl.textContent = formatBytes(bytes);
+        }
+
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        // ===== GRAPHIQUE EN BARRES (sans animation) =====
+        function updateChart(ops) {
+            // Regrouper les tickets par jour (date)
+            const last7Days = [];
+            const today = new Date();
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - i);
+                const dateStr = d.toISOString().split('T')[0];
+                last7Days.push(dateStr);
+            }
+            const counts = last7Days.map(date => {
+                return ops.filter(op => op.date && op.date.startsWith(date)).reduce((sum, op) => sum + (op.count || 0), 0);
+            });
+            const ctx = document.getElementById('ticketsChart')?.getContext('2d');
+            if (!ctx) return;
+            if (chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'bar', // Changé en barres
+                data: {
+                    labels: last7Days.map(d => d.slice(5)), // MM-DD
+                    datasets: [{
+                        label: 'Tickets générés',
+                        data: counts,
+                        backgroundColor: '#0a1f44', // Couleur des barres
+                        borderColor: '#0a1f44',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    animation: false, // Désactive l'animation
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ===== MISE À JOUR APERÇU =====
+        function updateTicketDisplay() {
+            const title = eventTitle.value.trim() || "Music Festival";
+            const type = eventType.value.trim() || "Evènement";
+            const status = statusInput.value;
+            const location = locationInput.value.trim() || "France, Paris";
+            const price = priceInput.value.trim() || "5000 FCFA";
+
+            displayTitle.innerText = title;
+            displayStart.innerText = formatDateFr(startDate.value) || '03 Juin 2025';
+            displayEnd.innerText = formatDateFr(endDate.value) || '03 Juin 2025';
+            displayLocation.innerText = location;
+            displayType.innerText = type;
+            displayStatus.innerText = status;
+            const lower = status.toLowerCase();
+            if (lower.includes('premium')) displayStatus.className = 'status-badge-display premium';
+            else if (lower.includes('standard')) displayStatus.className = 'status-badge-display standard';
+            else if (lower.includes('vvip')) displayStatus.className = 'status-badge-display vvip';
+            else if (lower.includes('vip')) displayStatus.className = 'status-badge-display vip';
+            else displayStatus.className = 'status-badge-display default';
+            displayPrice.innerText = price;
+        }
+        function formatDateFr(d) {
+            if (!d) return '';
+            const [y,m,day] = d.split('-');
+            const date = new Date(y, m-1, day);
+            return date.toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
+        }
+        [eventTitle,startDate,endDate,locationInput,eventType,statusInput,priceInput].forEach(i => {
+            i.addEventListener('input', updateTicketDisplay);
+            i.addEventListener('change', updateTicketDisplay);
+        });
+
+        // Image de fond (optionnel) - nous avons supprimé le champ, donc on garde l'image par défaut
+        ticketCard.style.backgroundImage = `url('${DEFAULT_BG_IMAGE}')`;
+
+        // ===== EXTRACTION ID =====
+        function extractIdFromFilename(name) {
+            const m = name.match(/\(\s*(?:Id-\s*)?([^)]+)\s*\)/i);
+            if (m && m[1]) return m[1].trim();
+            const m2 = name.match(/Id-\s*([^\s)]+)/i);
+            return m2 ? m2[1].trim() : null;
+        }
+
+        // ===== GÉNÉRATION NUMÉRO DE SÉRIE ALÉATOIRE =====
+        function generateSerial() {
+            return Math.random().toString(36).substring(2,10).toUpperCase();
+        }
+
+        // ===== CAPTURE IMAGE =====
+        async function captureTicketImage(scale=3) {
+            try {
+                const canvas = await html2canvas(ticketCard, { scale, backgroundColor:'#fff', useCORS:true });
+                return canvas.toDataURL('image/jpeg', parseFloat(qualitySlider.value));
+            } catch { return null; }
+        }
+
+        // ===== SPINNERS =====
+        function setButtonLoading(btn, loading) {
+            if (loading) {
+                btn.dataset.original = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement...';
+                btn.disabled = true;
+            } else {
+                btn.innerHTML = btn.dataset.original || btn.innerHTML;
+                btn.disabled = false;
+            }
+        }
+
+        // ===== ALERTES =====
+        function showAlert(type, title, msg) {
+            const a = document.createElement('div');
+            a.className = `alert alert-${type}`;
+            const icon = type==='success'?'check-circle': type==='error'?'exclamation-circle':'info-circle';
+            a.innerHTML = `<i class="fas fa-${icon}"></i><div><strong>${title}</strong><br>${msg}</div>`;
+            a.style.background = type==='success'?'#d4edda': type==='error'?'#f8d7da':'#fff3cd';
+            a.style.color = type==='success'?'#155724': type==='error'?'#721c24':'#856404';
+            a.style.borderLeft = `4px solid ${type==='success'?'#28a745':type==='error'?'#dc3545':'#ffc107'}`;
+            a.style.padding = '14px 18px';
+            a.style.borderRadius = 'var(--radius)';
+            a.style.marginBottom = '16px';
+            a.style.display = 'flex';
+            a.style.alignItems = 'center';
+            a.style.gap = '12px';
+            a.style.fontSize = '14px';
+            alertsContainer.appendChild(a);
+            setTimeout(() => a.remove(), 4000);
+        }
+
+        // ===== GESTION MODES =====
+        function initModes() {
+            updateModeDisplay('single');
+            singleModeBtn.addEventListener('click', () => { currentMode='single'; updateModeDisplay('single'); resetFileSelection(); });
+            batchModeBtn.addEventListener('click', () => { currentMode='batch'; updateModeDisplay('batch'); resetFileSelection(); });
+        }
+        function updateModeDisplay(mode) {
+            singleModeBtn.classList.toggle('active', mode==='single');
+            batchModeBtn.classList.toggle('active', mode==='batch');
+            batchOptions.classList.toggle('active', mode==='batch');
+            if (mode==='single') {
+                uploadTitle.textContent = 'Déposez votre QR code';
+                uploadSubtitle.textContent = '1 fichier maximum';
+                qrUpload.removeAttribute('multiple');
+                batchSizeEl.textContent = '--';
+                currentBatchLimit = null;
+            } else {
+                uploadTitle.textContent = 'Déposez vos QR codes';
+                uploadSubtitle.textContent = 'plusieurs fichiers acceptés';
+                qrUpload.setAttribute('multiple','multiple');
+                const active = document.querySelector('.batch-btn.active');
+                if (active) {
+                    currentBatchLimit = parseInt(active.dataset.limit);
+                    batchSizeEl.textContent = currentBatchLimit;
+                }
+            }
+            downloadAllBtn.innerHTML = mode==='single' ? '<i class="fas fa-download"></i> Télécharger' : '<i class="fas fa-file-archive"></i> Télécharger ZIP';
+        }
+        batchButtons.forEach(btn => btn.addEventListener('click', function() {
+            batchButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            if (currentMode==='batch') {
+                currentBatchLimit = parseInt(this.dataset.limit);
+                batchSizeEl.textContent = `${qrFiles.length} / ${currentBatchLimit}`;
+            }
+        }));
+
+        function resetFileSelection() {
+            qrFiles = [];
+            fileList.innerHTML = '';
+            qrUpload.value = '';
+            processBtn.disabled = true;
+            downloadAllBtn.disabled = true;
+            downloadSingleBtn.disabled = true;
+            idDisplay.innerHTML = '<i class="fas fa-sync-alt" style="color:var(--warning);"></i> En attente...';
+            currentIdEl.textContent = '--';
+            displayIdBottom.innerText = '--';
+            displayIdLeft.innerText = '--';
+            qrCodeImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TICKET';
+            miniQrCodeImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TICKET';
+            displayTicketNumber.innerText = '001';
+            displaySerialNumber.innerText = 'EX123AB7';
+            displayTicketNumberLeft.innerText = '001';
+            displaySerialNumberLeft.innerText = 'EX123AB7';
+            progressContainer.style.display = 'none';
+            progressBar.style.width = '0%';
+            progressText.textContent = '';
+        }
+
+        // ===== GESTION FICHIERS =====
+        qrUploadArea.addEventListener('click', () => qrUpload.click());
+        qrUpload.addEventListener('change', e => handleFiles(e.target.files));
+        ['dragenter','dragover','dragleave','drop'].forEach(ev => qrUploadArea.addEventListener(ev, e => e.preventDefault()));
+        qrUploadArea.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
+
+        function handleFiles(files) {
+            if (currentMode==='single' && files.length>1) {
+                showAlert('warning','Mode unique','1 seul fichier autorisé');
+                files = [files[0]];
+            }
+            if (currentMode==='batch' && currentBatchLimit && files.length>currentBatchLimit) {
+                showAlert('warning','Limite',`Seuls ${currentBatchLimit} fichiers seront traités`);
+                files = Array.from(files).slice(0, currentBatchLimit);
+            }
+            qrFiles = [];
+            fileList.innerHTML = '';
+            Array.from(files).forEach((f,idx) => {
+                const id = extractIdFromFilename(f.name);
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                div.innerHTML = `<div class="file-name"><i class="fas fa-qrcode"></i> ${f.name}</div>${id ? `<div class="extracted-id">${id}</div>` : '<div style="color:#dc3545;">ID?</div>'}`;
+                fileList.appendChild(div);
+                qrFiles.push({ file: f, id, index: idx });
+            });
+            if (qrFiles.length) {
+                processBtn.disabled = false;
+                if (qrFiles[0].id) {
+                    idDisplay.innerHTML = `<i class="fas fa-id-card" style="color:var(--success);"></i> ID: <strong>${qrFiles[0].id}</strong>`;
+                    currentIdEl.textContent = qrFiles[0].id;
+                    displayIdBottom.innerText = qrFiles[0].id;
+                    displayIdLeft.innerText = qrFiles[0].id;
+                } else {
+                    idDisplay.innerHTML = '<i class="fas fa-exclamation-triangle" style="color:var(--warning);"></i> Aucun ID trouvé';
+                }
+                const r = new FileReader();
+                r.onload = e => {
+                    qrCodeImg.src = e.target.result;
+                    miniQrCodeImg.src = e.target.result; // même image pour le mini QR
+                };
+                r.readAsDataURL(qrFiles[0].file);
+                if (currentMode==='batch') {
+                    batchSizeEl.textContent = `${qrFiles.length} / ${currentBatchLimit || '∞'}`;
+                }
+            }
+        }
+
+        // ===== TRAITEMENT QR =====
+        async function processQRCode(qrFile, index) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    // Mettre à jour l'ID
+                    displayIdBottom.innerText = qrFile.id || '--';
+                    displayIdLeft.innerText = qrFile.id || '--';
+                    
+                    // Générer numéro et série
+                    const ticketNumber = String(index + 1).padStart(3, '0');
+                    const serialNumber = generateSerial();
+                    displayTicketNumber.innerText = ticketNumber;
+                    displaySerialNumber.innerText = serialNumber;
+                    displayTicketNumberLeft.innerText = ticketNumber;
+                    displaySerialNumberLeft.innerText = serialNumber;
+
+                    // Charger l'image QR et mettre à jour les deux affichages
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        qrCodeImg.src = e.target.result;
+                        miniQrCodeImg.src = e.target.result; // mini QR synchronisé
+                        await new Promise(r => setTimeout(r, 100));
+                        const dataUrl = await captureTicketImage(4);
+                        if (dataUrl) {
+                            const fileName = qrFile.file.name.replace(/\.[^/.]+$/, '') + '_ticket.jpg';
+                            resolve({ 
+                                dataUrl, 
+                                id: qrFile.id, 
+                                fileName, 
+                                originalName: qrFile.file.name,
+                                ticketNumber,
+                                serialNumber
+                            });
+                        } else reject('Capture error');
+                    };
+                    reader.readAsDataURL(qrFile.file);
+                } catch (err) { reject(err); }
+            });
+        }
+
+        function extractPriceValue(priceStr) {
+            const m = priceStr.match(/(\d+)/);
+            return m ? parseInt(m[1]) : 0;
+        }
+
+        // ===== PROCESS CLICK =====
+        processBtn.addEventListener('click', async () => {
+            if (!qrFiles.length) return showAlert('error','Aucun fichier','Chargez des QR codes');
+            setButtonLoading(processBtn, true);
+            processedImages = [];
+            batchResults = [];
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressText.textContent = 'Démarrage...';
+            let completed = 0, errors = 0;
+            const price = extractPriceValue(priceInput.value);
+            const statusVal = statusInput.value;
+            for (let i=0; i<qrFiles.length; i++) {
+                try {
+                    const res = await processQRCode(qrFiles[i], i);
+                    processedImages.push(res);
+                    completed++;
+                    batchResults.push({ originalName: res.originalName, id: res.id });
+                    progressBar.style.width = `${Math.round(completed/qrFiles.length*100)}%`;
+                    progressText.textContent = `${completed}/${qrFiles.length}`;
+                    if (i === qrFiles.length-1) {
+                        displayIdBottom.innerText = res.id || '--';
+                        displayIdLeft.innerText = res.id || '--';
+                        currentIdEl.textContent = res.id || '--';
+                        downloadSingleBtn.disabled = false;
+                    }
+                } catch (e) { errors++; }
+                await new Promise(r => setTimeout(r, 100));
+            }
+            totalTickets += completed;
+            totalRevenue += completed * price;
+            const key = statusVal.toLowerCase().includes('premium') ? 'Premium' :
+                        statusVal.toLowerCase().includes('standard') ? 'Standard' :
+                        statusVal.toLowerCase().includes('vip') || statusVal.toLowerCase().includes('vvip') ? (statusVal.toLowerCase().includes('vvip') ? 'VIP' : 'VIP') : 'Autre';
+            if (statusVal.toLowerCase().includes('vvip') || statusVal.toLowerCase().includes('vip')) {
+                statusCount.VIP += completed;
+            } else if (statusVal.toLowerCase().includes('premium')) {
+                statusCount.Premium += completed;
+            } else if (statusVal.toLowerCase().includes('standard')) {
+                statusCount.Standard += completed;
+            } else {
+                statusCount.Autre += completed;
+            }
+            updateStatsDisplay();
+            await saveOperation({
+                date: new Date().toISOString(),
+                mode: currentMode,
+                count: completed,
+                totalAmount: completed * price,
+                statusBreakdown: { ...statusCount },
+                pricePerTicket: price,
+                statusValue: statusVal
+            });
+            if (currentMode==='batch' && batchResults.length) showBatchResults();
+            showAlert(errors ? 'warning' : 'success', errors ? 'Partiel' : 'Succès', `${completed} tickets, ${errors} erreurs`);
+            downloadAllBtn.disabled = false;
+            progressText.textContent = `Terminé: ${completed} succès, ${errors} erreurs`;
+            setButtonLoading(processBtn, false);
+            // Recharger les stats après traitement
+            await loadStatsFromDB();
+        });
+
+        function showBatchResults() {
+            let panel = document.getElementById('batchResultsPanel');
+            if (!panel) {
+                panel = document.createElement('div');
+                panel.id = 'batchResultsPanel';
+                panel.className = 'batch-results-panel';
+                panel.innerHTML = '<div class="batch-results-header"><h4><i class="fas fa-list"></i> Tickets traités</h4><button class="close-results" id="closeResults"><i class="fas fa-times"></i></button></div><div class="batch-results-content" id="batchResultsContent"></div><div class="batch-results-footer">Cliquez dehors pour fermer</div>';
+                document.body.appendChild(panel);
+                document.getElementById('closeResults').addEventListener('click', () => panel.style.display = 'none');
+                const btn = document.createElement('button');
+                btn.className = 'show-results-btn';
+                btn.id = 'showResultsBtn';
+                btn.innerHTML = '<i class="fas fa-list"></i>';
+                btn.onclick = () => panel.style.display = 'block';
+                document.body.appendChild(btn);
+            }
+            const content = document.getElementById('batchResultsContent');
+            content.innerHTML = batchResults.map(r => `<div class="batch-result-item"><span>${r.originalName}</span><span class="batch-result-id">${r.id||'N/A'}</span></div>`).join('');
+            panel.style.display = 'block';
+            document.getElementById('showResultsBtn').style.display = 'flex';
+        }
+
+        // ===== TÉLÉCHARGEMENTS AVEC FÊTE =====
+        downloadSingleBtn.addEventListener('click', () => {
+            if (!processedImages.length) return showAlert('error','Aucune image','Traitez d\'abord');
+            const last = processedImages[processedImages.length-1];
+            downloadImage(last.dataUrl, last.fileName);
+            celebrate(); // 🎉
+        });
+        downloadAllBtn.addEventListener('click', async () => {
+            if (!processedImages.length) return showAlert('error','Aucune image');
+            setButtonLoading(downloadAllBtn, true);
+            if (currentMode === 'single') {
+                downloadImage(processedImages[0].dataUrl, processedImages[0].fileName);
+                celebrate();
+            } else {
+                try {
+                    const zip = new JSZip();
+                    const folder = zip.folder('tickets');
+                    processedImages.forEach(img => {
+                        const data = img.dataUrl.split(',')[1];
+                        folder.file(img.fileName, b64toBlob(data, 'image/jpeg'));
+                    });
+                    const blob = await zip.generateAsync({ type: 'blob' });
+                    saveAs(blob, `tickets_${Date.now()}.zip`);
+                    celebrate();
+                } catch (e) { showAlert('error','Erreur ZIP',e.message); }
+            }
+            setButtonLoading(downloadAllBtn, false);
+        });
+        function b64toBlob(b64, type) {
+            const bytes = atob(b64), arr = [];
+            for (let i=0; i<bytes.length; i+=512) {
+                const slice = bytes.slice(i,i+512);
+                const nums = new Array(slice.length);
+                for (let j=0; j<slice.length; j++) nums[j] = slice.charCodeAt(j);
+                arr.push(new Uint8Array(nums));
+            }
+            return new Blob(arr, { type });
+        }
+        function downloadImage(dataUrl, name) {
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = name;
+            a.click();
+        }
+
+        // ===== AUTRES BOUTONS =====
+        resetBtn.addEventListener('click', () => {
+            qrFiles = []; processedImages = []; batchResults = [];
+            resetFileSelection();
+            loadStatsFromDB();
+            currentMode = 'single';
+            updateModeDisplay('single');
+            document.querySelector('.batch-btn[data-limit="50"]').classList.add('active');
+            ticketCard.style.backgroundImage = `url('${DEFAULT_BG_IMAGE}')`;
+            // bgImageInput n'existe plus
+            showAlert('success','Réinitialisé','Prêt pour une nouvelle opération');
+        });
+
+        exportDataBtn.addEventListener('click', async () => {
+            setButtonLoading(exportDataBtn, true);
+            const ops = await getAllOperations();
+            const blob = new Blob([JSON.stringify(ops,null,2)], { type:'application/json' });
+            saveAs(blob, `nexticket_export_${Date.now()}.json`);
+            setButtonLoading(exportDataBtn, false);
+        });
+
+        clearDataBtn.addEventListener('click', () => {
+            modalTitle.innerText = 'Effacer toutes les données';
+            modalMessage.innerText = 'Cette action est irréversible. Confirmez-vous ?';
+            modalIcon.className = 'fas fa-exclamation-triangle';
+            modalIcon.style.color = 'var(--danger)';
+            modalOverlay.style.display = 'flex';
+            modalConfirm.onclick = async () => {
+                await clearAllOperations();
+                await loadStatsFromDB();
+                modalOverlay.style.display = 'none';
+                showAlert('success','Données effacées','Toutes les statistiques ont été remises à zéro');
+            };
+        });
+        modalCancel.addEventListener('click', () => modalOverlay.style.display = 'none');
+        modalOverlay.addEventListener('click', e => { if (e.target===modalOverlay) modalOverlay.style.display='none'; });
+
+        // ===== QUALITÉ SLIDER =====
+        qualitySlider.addEventListener('input', () => {
+            qualityValue.textContent = Math.round(qualitySlider.value*100)+'%';
+        });
+
+        // ===== PRÉVISUALISATION =====
+        previewBtn.addEventListener('click', async () => {
+            if (processedImages.length) {
+                const last = processedImages[processedImages.length-1];
+                displayIdBottom.innerText = last.id || '--';
+                displayIdLeft.innerText = last.id || '--';
+                displayTicketNumber.innerText = last.ticketNumber || '001';
+                displaySerialNumber.innerText = last.serialNumber || 'EX123AB7';
+                displayTicketNumberLeft.innerText = last.ticketNumber || '001';
+                displaySerialNumberLeft.innerText = last.serialNumber || 'EX123AB7';
+                const f = qrFiles.find(f => f.file.name === last.originalName);
+                if (f) {
+                    const r = new FileReader();
+                    r.onload = e => {
+                        qrCodeImg.src = e.target.result;
+                        miniQrCodeImg.src = e.target.result;
+                    };
+                    r.readAsDataURL(f.file);
+                }
+            } else showAlert('warning','Aperçu','Traitez d\'abord un QR code');
+        });
+
+        // ===== MOBILE SIDEBAR TOGGLE =====
+        mobileMenuToggle.addEventListener('click', () => {
+            sidebar.classList.add('mobile-visible');
+            sidebarOverlay.classList.add('active');
+        });
+
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('mobile-visible');
+            sidebarOverlay.classList.remove('active');
+        });
+
+        document.querySelectorAll('.nav-link').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (window.innerWidth <= 992) {
+                    sidebar.classList.remove('mobile-visible');
+                    sidebarOverlay.classList.remove('active');
+                }
+            });
+        });
+
+        // ===== GESTION DES ONGLETS =====
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            document.querySelector(`.nav-link[data-tab="${tabId}"]`).classList.add('active');
+            if (tabId === 'stats' || tabId === 'storage') {
+                loadStatsFromDB(); // rafraîchir les données
+            }
+        }
+
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const tabId = link.getAttribute('data-tab');
+                switchTab(tabId);
+            });
+        });
+
+        // ===== INIT =====
+        initModes();
+        updateTicketDisplay();
+        showAlert('info','Bienvenue','NexTicket est prêt');
+    </script>
+    <!-- Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker enregistré (scope:', reg.scope, ')'))
+                    .catch(err => console.error('Erreur Service Worker:', err));
+            });
+        }
+    </script>
+</body>
+</html>
