@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NexTicket · Générateur de tickets QR code</title>
     <!-- Manifest PWA -->
     <link rel="manifest" href="./manifest.json">
@@ -43,6 +43,7 @@
             --shadow-lg: 0 16px 40px rgba(10,31,68,0.16);
             --radius: 8px;
             --transition: 0.25s ease;
+            --navbar-height: 70px;
         }
 
         * {
@@ -56,55 +57,196 @@
             background: linear-gradient(145deg, #eef2f6 0%, #d9e2ec 100%);
             min-height: 100vh;
             color: var(--dark);
+            overflow-x: hidden;
         }
 
         /* ===== DASHBOARD LAYOUT ===== */
-        .dashboard { display: flex; min-height: 100vh; position: relative; }
-        .sidebar { width: 400px; background: var(--white); backdrop-filter: blur(10px); box-shadow: var(--shadow-md); padding: 32px 24px; transition: transform var(--transition); position: fixed; height: 100vh; overflow-y: auto; z-index: 1000; border-right: 1px solid rgba(10,31,68,0.1); }
-        .logo { text-align: center; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 1px solid rgba(10,31,68,0.1); }
-        .logo i { font-size: 48px; color: var(--primary); background: rgba(10,31,68,0.05); padding: 12px; border-radius: 16px; margin-bottom: 12px; }
-        .logo h1 { font-size: 24px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
-        .logo p { font-size: 13px; color: var(--gray); font-weight: 500; }
-        .nav-menu { list-style: none; margin: 24px 0; }
-        .nav-item { margin-bottom: 8px; }
-        .nav-link { display: flex; align-items: center; padding: 14px 18px; color: var(--gray); text-decoration: none; border-radius: var(--radius); font-weight: 500; font-size: 16px; transition: var(--transition); cursor: pointer; }
-        .nav-link i { margin-right: 14px; font-size: 20px; width: 24px; color: var(--primary); }
-        .nav-link:hover { background: rgba(10,31,68,0.05); color: var(--primary); }
-        .nav-link.active { background: var(--primary); color: white; }
-        .nav-link.active i { color: white; }
-        .download-modes { margin-top: 20px; padding: 20px 16px; background: rgba(10,31,68,0.02); border-radius: var(--radius); border: 1px solid rgba(10,31,68,0.08); }
-        .download-modes h3 { font-size: 16px; font-weight: 600; color: var(--dark); margin-bottom: 16px; display: flex; align-items: center; }
-        .download-modes h3 i { margin-right: 8px; color: var(--primary); }
-        .mode-btn { width: 100%; padding: 14px 16px; background: white; border: 1px solid rgba(10,31,68,0.15); border-radius: var(--radius); cursor: pointer; font-weight: 500; font-size: 15px; display: flex; align-items: center; gap: 12px; transition: var(--transition); margin-bottom: 10px; }
-        .mode-btn i { font-size: 18px; width: 24px; }
-        .mode-btn:hover { border-color: var(--primary); background: rgba(10,31,68,0.02); }
-        .mode-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
-        .mode-description { font-size: 13px; color: var(--gray); margin-bottom: 12px; padding-left: 36px; line-height: 1.4; }
-        .batch-options { margin-top: 16px; background: white; border-radius: var(--radius); padding: 16px; display: none; border: 1px solid rgba(10,31,68,0.1); }
-        .batch-options.active { display: block; animation: slideDown 0.3s; }
-        .batch-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
-        .batch-btn { padding: 12px; background: var(--light); border: 1px solid #e2e8f0; border-radius: var(--radius); cursor: pointer; font-weight: 500; font-size: 14px; transition: var(--transition); }
-        .batch-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
-        .batch-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .zip-info { font-size: 12px; color: var(--success); display: flex; align-items: center; gap: 6px; }
+        .dashboard { 
+            display: flex; 
+            flex-direction: column;
+            min-height: 100vh; 
+            position: relative; 
+        }
 
         /* ===== MAIN CONTENT ===== */
-        .main-content { flex: 1; margin-left: 400px; padding: 30px; transition: margin-left var(--transition); }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 1px solid rgba(10,31,68,0.1); }
-        .header-left { display: flex; align-items: center; gap: 16px; }
-        .mobile-menu-toggle { display: none; background: var(--primary); color: white; border: none; width: 44px; height: 44px; border-radius: var(--radius); font-size: 22px; cursor: pointer; }
-        .header h2 { font-size: 28px; font-weight: 700; color: var(--primary); }
+        .main-content { 
+            flex: 1; 
+            padding: 30px 30px calc(30px + var(--navbar-height)); 
+            transition: padding var(--transition); 
+        }
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 32px; 
+            padding-bottom: 16px; 
+            border-bottom: 1px solid rgba(10,31,68,0.1); 
+        }
+        .header-left { 
+            display: flex; 
+            align-items: center; 
+            gap: 16px; 
+        }
+        .header h2 { 
+            font-size: 28px; 
+            font-weight: 700; 
+            color: var(--primary); 
+        }
+
+        /* ===== MODE CARD (remplace la sidebar) ===== */
+        .mode-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(10,31,68,0.05);
+        }
+        .mode-card h3 { 
+            font-size: 18px; 
+            font-weight: 600; 
+            color: var(--dark); 
+            margin-bottom: 16px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+        }
+        .mode-card h3 i { 
+            color: var(--primary); 
+        }
+        .mode-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .mode-btn { 
+            flex: 1;
+            padding: 14px 16px; 
+            background: white; 
+            border: 1px solid rgba(10,31,68,0.15); 
+            border-radius: var(--radius); 
+            cursor: pointer; 
+            font-weight: 500; 
+            font-size: 15px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            gap: 12px; 
+            transition: var(--transition); 
+        }
+        .mode-btn i { 
+            font-size: 18px; 
+            width: 24px; 
+        }
+        .mode-btn:hover { 
+            border-color: var(--primary); 
+            background: rgba(10,31,68,0.02); 
+        }
+        .mode-btn.active { 
+            background: var(--primary); 
+            border-color: var(--primary); 
+            color: white; 
+        }
+        .mode-description { 
+            font-size: 13px; 
+            color: var(--gray); 
+            margin-bottom: 12px; 
+            padding-left: 36px; 
+            line-height: 1.4; 
+        }
+        .batch-options { 
+            margin-top: 16px; 
+            background: white; 
+            border-radius: var(--radius); 
+            padding: 16px; 
+            display: none; 
+            border: 1px solid rgba(10,31,68,0.1); 
+        }
+        .batch-options.active { 
+            display: block; 
+            animation: slideDown 0.3s; 
+        }
+        .batch-buttons { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 10px; 
+            margin-bottom: 12px; 
+        }
+        .batch-btn { 
+            padding: 12px; 
+            background: var(--light); 
+            border: 1px solid #e2e8f0; 
+            border-radius: var(--radius); 
+            cursor: pointer; 
+            font-weight: 500; 
+            font-size: 14px; 
+            transition: var(--transition); 
+        }
+        .batch-btn:hover { 
+            background: var(--primary); 
+            color: white; 
+            border-color: var(--primary); 
+        }
+        .batch-btn.active { 
+            background: var(--primary); 
+            color: white; 
+            border-color: var(--primary); 
+        }
+        .zip-info { 
+            font-size: 12px; 
+            color: var(--success); 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+        }
 
         /* ===== STATS ===== */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: var(--white); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); text-align: center; transition: var(--transition); border: 1px solid rgba(10,31,68,0.05); }
-        .stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-        .stat-card i { font-size: 32px; color: var(--primary); background: rgba(10,31,68,0.05); padding: 12px; border-radius: 12px; margin-bottom: 12px; }
-        .stat-card h3 { font-size: 28px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
-        .stat-card p { color: var(--gray); font-weight: 500; font-size: 14px; }
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 30px; 
+        }
+        .stat-card { 
+            background: var(--white); 
+            border-radius: var(--radius); 
+            padding: 24px; 
+            box-shadow: var(--shadow-sm); 
+            text-align: center; 
+            transition: var(--transition); 
+            border: 1px solid rgba(10,31,68,0.05); 
+        }
+        .stat-card:hover { 
+            box-shadow: var(--shadow-md); 
+            transform: translateY(-2px); 
+        }
+        .stat-card i { 
+            font-size: 32px; 
+            color: var(--primary); 
+            background: rgba(10,31,68,0.05); 
+            padding: 12px; 
+            border-radius: 12px; 
+            margin-bottom: 12px; 
+        }
+        .stat-card h3 { 
+            font-size: 28px; 
+            font-weight: 700; 
+            color: var(--dark); 
+            margin-bottom: 4px; 
+        }
+        .stat-card p { 
+            color: var(--gray); 
+            font-weight: 500; 
+            font-size: 14px; 
+        }
 
         /* ===== PANELS ===== */
-        .content-area { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; }
+        .content-area { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 30px; 
+            margin-top: 20px; 
+        }
 
         /* Nouvelle section pour les onglets */
         .tab-content {
@@ -114,42 +256,206 @@
             display: block;
         }
 
-        .panel { background: var(--white); border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow-sm); border: 1px solid rgba(10,31,68,0.05); margin-bottom: 30px; }
-        .panel-title { display: flex; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid rgba(10,31,68,0.1); }
-        .panel-title i { font-size: 22px; color: var(--primary); margin-right: 12px; }
-        .panel-title h3 { font-size: 20px; font-weight: 600; color: var(--dark); }
+        .panel { 
+            background: var(--white); 
+            border-radius: var(--radius); 
+            padding: 28px; 
+            box-shadow: var(--shadow-sm); 
+            border: 1px solid rgba(10,31,68,0.05); 
+            margin-bottom: 30px; 
+        }
+        .panel-title { 
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 20px; 
+            padding-bottom: 16px; 
+            border-bottom: 1px solid rgba(10,31,68,0.1); 
+        }
+        .panel-title i { 
+            font-size: 22px; 
+            color: var(--primary); 
+            margin-right: 12px; 
+        }
+        .panel-title h3 { 
+            font-size: 20px; 
+            font-weight: 600; 
+            color: var(--dark); 
+        }
 
         /* ===== FORMULAIRES ===== */
-        .ticket-fields { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px; }
-        .ticket-fields .full-width { grid-column: span 2; }
-        .form-group { margin-bottom: 20px; }
-        .form-label { display: flex; align-items: center; font-weight: 500; font-size: 14px; margin-bottom: 6px; color: var(--dark); }
-        .form-label i { margin-right: 6px; color: var(--primary); font-size: 15px; }
-        .form-control, .form-select { width: 100%; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: var(--radius); font-size: 15px; transition: var(--transition); font-family: 'Poppins', sans-serif; }
-        .form-control:focus, .form-select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(10,31,68,0.1); }
-        .form-select { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230a1f44' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>"); background-repeat: no-repeat; background-position: right 16px center; background-size: 14px; }
-        .phone-display { background: #f1f5f9; padding: 14px 16px; border-radius: var(--radius); border-left: 4px solid var(--primary); font-weight: 500; display: flex; align-items: center; gap: 10px; font-size: 15px; }
-        .file-upload { border: 2px dashed #cbd5e1; border-radius: var(--radius); padding: 40px 20px; text-align: center; cursor: pointer; transition: var(--transition); background: #f8fafc; }
-        .file-upload:hover { border-color: var(--primary); background: rgba(10,31,68,0.02); }
-        .file-upload i { font-size: 56px; color: var(--primary); margin-bottom: 12px; }
-        .file-list { margin-top: 16px; max-height: 200px; overflow-y: auto; }
-        .file-item { display: flex; align-items: center; justify-content: space-between; background: #f1f5f9; padding: 12px 16px; border-radius: var(--radius); margin-bottom: 8px; }
-        .file-name i { color: var(--primary); margin-right: 8px; }
-        .extracted-id { background: var(--primary); color: white; padding: 4px 12px; border-radius: 30px; font-size: 12px; font-weight: 500; }
-        .progress-container { margin-top: 16px; background: #e2e8f0; border-radius: 30px; height: 10px; overflow: hidden; display: none; }
-        .progress-bar { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); width: 0%; transition: width 0.3s; }
-        .progress-text { text-align: center; margin-top: 8px; font-size: 14px; color: var(--gray); }
-        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
-        .btn { padding: 16px 20px; border: none; border-radius: var(--radius); font-weight: 600; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: var(--transition); background: var(--primary); color: white; font-family: 'Poppins', sans-serif; }
-        .btn:hover { background: var(--primary-light); }
-        .btn-success { background: var(--success); }
-        .btn-success:hover { background: #219653; }
-        .btn-warning { background: var(--warning); }
-        .btn-warning:hover { background: #d35400; }
-        .btn-danger { background: var(--danger); }
-        .btn-danger:hover { background: #a93226; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .reset-section { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .ticket-fields { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 16px; 
+            margin-bottom: 20px; 
+        }
+        .ticket-fields .full-width { 
+            grid-column: span 2; 
+        }
+        .form-group { 
+            margin-bottom: 20px; 
+        }
+        .form-label { 
+            display: flex; 
+            align-items: center; 
+            font-weight: 500; 
+            font-size: 14px; 
+            margin-bottom: 6px; 
+            color: var(--dark); 
+        }
+        .form-label i { 
+            margin-right: 6px; 
+            color: var(--primary); 
+            font-size: 15px; 
+        }
+        .form-control, .form-select { 
+            width: 100%; 
+            padding: 14px 16px; 
+            border: 1px solid #e2e8f0; 
+            border-radius: var(--radius); 
+            font-size: 15px; 
+            transition: var(--transition); 
+            font-family: 'Poppins', sans-serif; 
+        }
+        .form-control:focus, .form-select:focus { 
+            border-color: var(--primary); 
+            outline: none; 
+            box-shadow: 0 0 0 3px rgba(10,31,68,0.1); 
+        }
+        .form-select { 
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230a1f44' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>"); 
+            background-repeat: no-repeat; 
+            background-position: right 16px center; 
+            background-size: 14px; 
+        }
+        .phone-display { 
+            background: #f1f5f9; 
+            padding: 14px 16px; 
+            border-radius: var(--radius); 
+            border-left: 4px solid var(--primary); 
+            font-weight: 500; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            font-size: 15px; 
+        }
+        .file-upload { 
+            border: 2px dashed #cbd5e1; 
+            border-radius: var(--radius); 
+            padding: 40px 20px; 
+            text-align: center; 
+            cursor: pointer; 
+            transition: var(--transition); 
+            background: #f8fafc; 
+        }
+        .file-upload:hover { 
+            border-color: var(--primary); 
+            background: rgba(10,31,68,0.02); 
+        }
+        .file-upload i { 
+            font-size: 56px; 
+            color: var(--primary); 
+            margin-bottom: 12px; 
+        }
+        .file-list { 
+            margin-top: 16px; 
+            max-height: 200px; 
+            overflow-y: auto; 
+        }
+        .file-item { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            background: #f1f5f9; 
+            padding: 12px 16px; 
+            border-radius: var(--radius); 
+            margin-bottom: 8px; 
+        }
+        .file-name i { 
+            color: var(--primary); 
+            margin-right: 8px; 
+        }
+        .extracted-id { 
+            background: var(--primary); 
+            color: white; 
+            padding: 4px 12px; 
+            border-radius: 30px; 
+            font-size: 12px; 
+            font-weight: 500; 
+        }
+        .progress-container { 
+            margin-top: 16px; 
+            background: #e2e8f0; 
+            border-radius: 30px; 
+            height: 10px; 
+            overflow: hidden; 
+            display: none; 
+        }
+        .progress-bar { 
+            height: 100%; 
+            background: linear-gradient(90deg, var(--primary), var(--accent)); 
+            width: 0%; 
+            transition: width 0.3s; 
+        }
+        .progress-text { 
+            text-align: center; 
+            margin-top: 8px; 
+            font-size: 14px; 
+            color: var(--gray); 
+        }
+        .action-buttons { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 16px; 
+            margin-top: 20px; 
+        }
+        .btn { 
+            padding: 16px 20px; 
+            border: none; 
+            border-radius: var(--radius); 
+            font-weight: 600; 
+            font-size: 15px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 8px; 
+            cursor: pointer; 
+            transition: var(--transition); 
+            background: var(--primary); 
+            color: white; 
+            font-family: 'Poppins', sans-serif; 
+        }
+        .btn:hover { 
+            background: var(--primary-light); 
+        }
+        .btn-success { 
+            background: var(--success); 
+        }
+        .btn-success:hover { 
+            background: #219653; 
+        }
+        .btn-warning { 
+            background: var(--warning); 
+        }
+        .btn-warning:hover { 
+            background: #d35400; 
+        }
+        .btn-danger { 
+            background: var(--danger); 
+        }
+        .btn-danger:hover { 
+            background: #a93226; 
+        }
+        .btn:disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed; 
+        }
+        .reset-section { 
+            margin-top: 30px; 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 16px; 
+        }
 
         /* ===== NOUVEAU STYLE TICKET PAYSAGE ===== */
         .preview-container {
@@ -587,6 +893,47 @@
             z-index: 1400;
         }
 
+        /* ===== BOTTOM NAVIGATION BAR ===== */
+        .bottom-navbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: var(--navbar-height);
+            background: var(--white);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 -4px 12px rgba(10,31,68,0.08);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
+            border-top: 1px solid rgba(10,31,68,0.1);
+        }
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            padding: 8px 0;
+        }
+        .nav-item i {
+            font-size: 22px;
+            margin-bottom: 4px;
+            color: var(--primary);
+        }
+        .nav-item.active {
+            color: var(--primary);
+        }
+        .nav-item.active i {
+            color: var(--primary);
+        }
+
         /* ===== CONFETTIS EN PREMIER PLAN ===== */
         canvas[style*="position: fixed"] {
             z-index: 9999 !important;
@@ -598,23 +945,10 @@
             .content-area { grid-template-columns: 1fr; }
         }
 
-        @media (max-width: 992px) {
-            .sidebar { transform: translateX(-100%); transition: transform var(--transition); width: 90%; max-width: 450px; }
-            .sidebar.mobile-visible { transform: translateX(0); }
-            .main-content { margin-left: 0 !important; }
-            .mobile-menu-toggle { display: block; }
-            .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 999; display: none; }
-            .sidebar-overlay.active { display: block; }
-            .sidebar .mode-btn { font-size: 16px; word-break: break-word; }
-            .sidebar .mode-description { padding-left: 36px; font-size: 14px; }
-            .batch-buttons { grid-template-columns: repeat(2, 1fr); }
-            .batch-btn { padding: 14px; font-size: 15px; }
-            .stats-cards-row { grid-template-columns: 1fr; }
-        }
-
         @media (max-width: 768px) {
-            .stats-advanced { grid-template-columns: 1fr; }
-            .reset-section { grid-template-columns: 1fr; }
+            .main-content { padding: 20px 20px calc(20px + var(--navbar-height)); }
+            .header h2 { font-size: 22px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .ticket-fields { grid-template-columns: 1fr; }
             .ticket-fields .full-width { grid-column: span 1; }
             .ticket-card { width: 100%; max-width: 500px; }  /* Adaptation mobile */
@@ -622,6 +956,8 @@
             .ticket-left { border-right: none; border-bottom: 2px dashed #2c3e50; align-items: center; } /* Centrer sur mobile */
             .stub-info { text-align: center; }
             .stub-info div { justify-content: center; gap: 10px; }
+            .mode-buttons { flex-direction: column; }
+            .mode-description { padding-left: 0; text-align: center; }
         }
 
         /* Animations */
@@ -638,48 +974,30 @@
 </head>
 <body>
     <div class="dashboard">
-        <!-- Overlay pour mobile -->
-        <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-        <!-- SIDEBAR (modifiée avec nouveaux onglets) -->
-        <aside class="sidebar" id="sidebar">
-            <div class="logo">
-                <i class="fas fa-ticket-alt"></i>
-                <h1>NexTicket</h1>
-                <p>Générateur professionnel</p>
+        <!-- MAIN CONTENT -->
+        <main class="main-content" id="mainContent">
+            <div class="header">
+                <div class="header-left">
+                    <h2><i class="fas fa-magic"></i> NexTicket · Studio</h2>
+                </div>
+                <!-- Bouton de thème supprimé -->
             </div>
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a class="nav-link active" data-tab="dashboard">
-                        <i class="fas fa-chart-pie"></i>
-                        <span>Tableau de bord</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" data-tab="stats">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Statistiques</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" data-tab="storage">
-                        <i class="fas fa-database"></i>
-                        <span>Stockage</span>
-                    </a>
-                </li>
-            </ul>
-            <div class="download-modes">
-                <h3><i class="fas fa-download"></i> <span>Mode</span></h3>
-                <button class="mode-btn active" id="singleModeBtn">
-                    <i class="fas fa-file-image"></i>
-                    <span>Ticket unique</span>
-                </button>
-                <div class="mode-description"><span>1 ticket à la fois</span></div>
-                <button class="mode-btn" id="batchModeBtn">
-                    <i class="fas fa-layer-group"></i>
-                    <span>Lot multiple</span>
-                </button>
-                <div class="mode-description"><span>Jusqu'à 50 tickets</span></div>
+
+            <!-- MODE CARD (remplace le menu latéral) -->
+            <div class="mode-card">
+                <h3><i class="fas fa-download"></i> Mode de génération</h3>
+                <div class="mode-buttons">
+                    <button class="mode-btn active" id="singleModeBtn">
+                        <i class="fas fa-file-image"></i>
+                        <span>Ticket unique</span>
+                    </button>
+                    <button class="mode-btn" id="batchModeBtn">
+                        <i class="fas fa-layer-group"></i>
+                        <span>Lot multiple</span>
+                    </button>
+                </div>
+                <div class="mode-description" id="singleDesc">1 ticket à la fois</div>
+                <div class="mode-description" id="batchDesc" style="display: none;">Jusqu'à 50 tickets</div>
                 <div class="batch-options" id="batchOptions">
                     <div class="batch-buttons">
                         <button class="batch-btn" data-limit="10">10</button>
@@ -691,19 +1009,6 @@
                         <i class="fas fa-file-archive"></i> ZIP automatique
                     </div>
                 </div>
-            </div>
-        </aside>
-
-        <!-- MAIN CONTENT -->
-        <main class="main-content" id="mainContent">
-            <div class="header">
-                <div class="header-left">
-                    <button class="mobile-menu-toggle" id="mobileMenuToggle">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <h2><i class="fas fa-magic"></i> NexTicket · Studio</h2>
-                </div>
-                <!-- Bouton de thème supprimé -->
             </div>
 
             <!-- ALERTS (global) -->
@@ -734,8 +1039,6 @@
                         <p>Réussite</p>
                     </div>
                 </div>
-
-                <!-- Les cartes "Montant total" et "Répartition" ont été supprimées d'ici (maintenant dans l'onglet Statistiques) -->
 
                 <!-- CONTENU PRINCIPAL (configuration + aperçu) -->
                 <div class="content-area">
@@ -781,8 +1084,6 @@
                                 <input type="text" id="price" class="form-control" value="5000 XOF">
                             </div>
                         </div>
-
-                        <!-- Champ Fond supprimé -->
 
                         <div class="form-group">
                             <label class="form-label"><i class="fas fa-id-card"></i> ID extrait</label>
@@ -982,6 +1283,22 @@
                 </div>
             </div>
         </main>
+
+        <!-- BOTTOM NAVIGATION BAR -->
+        <nav class="bottom-navbar">
+            <div class="nav-item active" data-tab="dashboard">
+                <i class="fas fa-chart-pie"></i>
+                <span>Tableau</span>
+            </div>
+            <div class="nav-item" data-tab="stats">
+                <i class="fas fa-chart-line"></i>
+                <span>Stats</span>
+            </div>
+            <div class="nav-item" data-tab="storage">
+                <i class="fas fa-database"></i>
+                <span>Stockage</span>
+            </div>
+        </nav>
     </div>
 
     <!-- MODAL CONFIRMATION -->
@@ -1023,12 +1340,13 @@
         const batchOptions = document.getElementById('batchOptions');
         const uploadTitle = document.getElementById('uploadTitle');
         const uploadSubtitle = document.getElementById('uploadSubtitle');
+        const singleDesc = document.getElementById('singleDesc');
+        const batchDesc = document.getElementById('batchDesc');
         const totalProcessedEl = document.getElementById('totalProcessed');
         const currentIdEl = document.getElementById('currentId');
         const batchSizeEl = document.getElementById('batchSize');
         const successRateEl = document.getElementById('successRate');
         const idDisplay = document.getElementById('idDisplay');
-        // totalAmountEl, statPremium, statStandard, statVip, statOther ont été supprimés du DOM
         const eventTitle = document.getElementById('eventTitle');
         const startDate = document.getElementById('startDate');
         const endDate = document.getElementById('endDate');
@@ -1074,10 +1392,6 @@
         const modalTitle = document.getElementById('modalTitle');
         const modalMessage = document.getElementById('modalMessage');
         const modalIcon = document.getElementById('modalIcon');
-        const sidebar = document.getElementById('sidebar');
-        const mainContent = document.getElementById('mainContent');
-        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
 
         // Variables globales
         let qrFiles = [];
@@ -1155,8 +1469,6 @@
         function updateStatsDisplay() {
             // Mise à jour des éléments du tableau de bord avec vérification
             if (totalProcessedEl) totalProcessedEl.textContent = totalTickets;
-            // totalAmountEl a été supprimé
-            // Les éléments de répartition ont été supprimés du tableau de bord
             if (successRateEl) successRateEl.textContent = '100%';
             
             // Mise à jour des stats de l'onglet avec vérification
@@ -1202,20 +1514,20 @@
             if (!ctx) return;
             if (chartInstance) chartInstance.destroy();
             chartInstance = new Chart(ctx, {
-                type: 'bar', // Changé en barres
+                type: 'bar',
                 data: {
-                    labels: last7Days.map(d => d.slice(5)), // MM-DD
+                    labels: last7Days.map(d => d.slice(5)),
                     datasets: [{
                         label: 'Tickets générés',
                         data: counts,
-                        backgroundColor: '#0a1f44', // Couleur des barres
+                        backgroundColor: '#0a1f44',
                         borderColor: '#0a1f44',
                         borderWidth: 1
                     }]
                 },
                 options: {
                     responsive: true,
-                    animation: false, // Désactive l'animation
+                    animation: false,
                     plugins: {
                         legend: { display: false }
                     },
@@ -1331,12 +1643,16 @@
             batchModeBtn.classList.toggle('active', mode==='batch');
             batchOptions.classList.toggle('active', mode==='batch');
             if (mode==='single') {
+                singleDesc.style.display = 'block';
+                batchDesc.style.display = 'none';
                 uploadTitle.textContent = 'Déposez votre QR code';
                 uploadSubtitle.textContent = '1 fichier maximum';
                 qrUpload.removeAttribute('multiple');
                 batchSizeEl.textContent = '--';
                 currentBatchLimit = null;
             } else {
+                singleDesc.style.display = 'none';
+                batchDesc.style.display = 'block';
                 uploadTitle.textContent = 'Déposez vos QR codes';
                 uploadSubtitle.textContent = 'plusieurs fichiers acceptés';
                 qrUpload.setAttribute('multiple','multiple');
@@ -1664,41 +1980,21 @@
             } else showAlert('warning','Aperçu','Traitez d\'abord un QR code');
         });
 
-        // ===== MOBILE SIDEBAR TOGGLE =====
-        mobileMenuToggle.addEventListener('click', () => {
-            sidebar.classList.add('mobile-visible');
-            sidebarOverlay.classList.add('active');
-        });
-
-        sidebarOverlay.addEventListener('click', () => {
-            sidebar.classList.remove('mobile-visible');
-            sidebarOverlay.classList.remove('active');
-        });
-
-        document.querySelectorAll('.nav-link').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (window.innerWidth <= 992) {
-                    sidebar.classList.remove('mobile-visible');
-                    sidebarOverlay.classList.remove('active');
-                }
-            });
-        });
-
         // ===== GESTION DES ONGLETS =====
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.getElementById(`tab-${tabId}`).classList.add('active');
-            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-            document.querySelector(`.nav-link[data-tab="${tabId}"]`).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`.nav-item[data-tab="${tabId}"]`).classList.add('active');
             if (tabId === 'stats' || tabId === 'storage') {
                 loadStatsFromDB(); // rafraîchir les données
             }
         }
 
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', (e) => {
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
                 e.preventDefault();
-                const tabId = link.getAttribute('data-tab');
+                const tabId = item.getAttribute('data-tab');
                 switchTab(tabId);
             });
         });
