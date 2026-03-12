@@ -944,7 +944,7 @@
             pointer-events: none !important;
         }
 
-        /* ===== RESPONSIVE ===== */
+        /* ===== RESPONSIVE (améliorations) ===== */
         @media (max-width: 1200px) {
             .content-area { grid-template-columns: 1fr; }
         }
@@ -971,7 +971,177 @@
             .file-upload { padding: 20px; }
         }
 
-        /* Animations */
+        /* ===== AMÉLIORATIONS RESPONSIVE SUPPLÉMENTAIRES ===== */
+        @media (max-width: 640px) {
+            .main-content {
+                padding: 15px 15px calc(15px + var(--navbar-height));
+            }
+            .header {
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+            }
+            .header h2 {
+                font-size: 20px;
+            }
+            .mode-card {
+                padding: 15px;
+            }
+            .mode-btn {
+                padding: 12px;
+                font-size: 14px;
+                gap: 8px;
+            }
+            .mode-btn i {
+                font-size: 16px;
+                width: 20px;
+            }
+            .batch-buttons {
+                grid-template-columns: 1fr 1fr;
+            }
+            .stat-card {
+                padding: 18px;
+            }
+            .stat-card i {
+                font-size: 28px;
+                padding: 10px;
+            }
+            .stat-card h3 {
+                font-size: 24px;
+            }
+            .stat-card p {
+                font-size: 13px;
+            }
+            .panel {
+                padding: 18px;
+            }
+            .panel-title {
+                margin-bottom: 15px;
+                padding-bottom: 12px;
+            }
+            .panel-title i {
+                font-size: 20px;
+                margin-right: 8px;
+            }
+            .panel-title h3 {
+                font-size: 18px;
+            }
+            .form-control, .form-select {
+                padding: 12px 14px;
+                font-size: 14px;
+            }
+            .file-upload {
+                padding: 30px 15px;
+            }
+            .file-upload i {
+                font-size: 48px;
+            }
+            .file-item {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+            .extracted-id {
+                padding: 3px 10px;
+                font-size: 11px;
+            }
+            .action-buttons {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .reset-section {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .btn {
+                padding: 14px;
+                font-size: 14px;
+            }
+            .preview-container {
+                padding: 10px;
+            }
+            .stats-cards-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            .storage-card {
+                padding: 18px;
+            }
+            .contact-info {
+                padding: 18px;
+            }
+            .modal {
+                padding: 24px;
+            }
+            .modal i {
+                font-size: 48px;
+            }
+            .modal h3 {
+                font-size: 20px;
+            }
+            .modal-actions button {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .batch-results-panel {
+                width: 90%;
+                right: 5%;
+                left: 5%;
+                bottom: 80px;
+            }
+            .show-results-btn {
+                bottom: 80px;
+                right: 15px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .header-left {
+                gap: 10px;
+            }
+            .header h2 {
+                font-size: 18px;
+            }
+            .mode-btn {
+                padding: 10px;
+                font-size: 13px;
+            }
+            .batch-buttons {
+                grid-template-columns: 1fr;
+            }
+            .stat-card {
+                padding: 15px;
+            }
+            .stat-card i {
+                font-size: 24px;
+                padding: 8px;
+            }
+            .stat-card h3 {
+                font-size: 22px;
+            }
+            .panel {
+                padding: 15px;
+            }
+            .ticket-fields {
+                gap: 12px;
+            }
+            .form-control, .form-select {
+                padding: 10px 12px;
+            }
+            .file-upload {
+                padding: 25px 10px;
+            }
+            .file-upload i {
+                font-size: 40px;
+            }
+            .file-item {
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+            .btn {
+                padding: 12px;
+            }
+        }
+
+        /* ===== ANIMATIONS ===== */
         @keyframes slideDown {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
