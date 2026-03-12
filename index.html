@@ -57,7 +57,7 @@
             background: linear-gradient(145deg, #eef2f6 0%, #d9e2ec 100%);
             min-height: 100vh;
             color: var(--dark);
-            overflow-x: hidden;
+            overflow-x: hidden; /* Empêche le débordement horizontal global */
         }
 
         /* ===== DASHBOARD LAYOUT ===== */
@@ -465,6 +465,9 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            width: 100%;
+            overflow-x: auto; /* Permet le défilement horizontal si le ticket est plus large */
+            -webkit-overflow-scrolling: touch; /* Défilement fluide sur mobile */
         }
 
         .ticket-card {
@@ -476,6 +479,7 @@
             background-size: cover;
             background-position: center;
             border-radius: 1px;     /* Coins arrondis */
+            flex-shrink: 0;          /* Empêche le rétrécissement */
         }
 
         .ticket-card * {
@@ -945,19 +949,26 @@
             .content-area { grid-template-columns: 1fr; }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 992px) {
             .main-content { padding: 20px 20px calc(20px + var(--navbar-height)); }
-            .header h2 { font-size: 22px; }
+            .header h2 { font-size: 24px; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .ticket-fields { grid-template-columns: 1fr; }
             .ticket-fields .full-width { grid-column: span 1; }
-            .ticket-card { width: 100%; max-width: 500px; }  /* Adaptation mobile */
-            .ticket-body { flex-direction: column; }
-            .ticket-left { border-right: none; border-bottom: 2px dashed #2c3e50; align-items: center; } /* Centrer sur mobile */
-            .stub-info { text-align: center; }
-            .stub-info div { justify-content: center; gap: 10px; }
+        }
+
+        @media (max-width: 768px) {
+            .header h2 { font-size: 20px; }
+            .stats-grid { grid-template-columns: 1fr; }
             .mode-buttons { flex-direction: column; }
             .mode-description { padding-left: 0; text-align: center; }
+        }
+
+        @media (max-width: 480px) {
+            .header h2 { font-size: 18px; }
+            .panel { padding: 20px; }
+            .btn { padding: 12px; font-size: 14px; }
+            .file-upload { padding: 20px; }
         }
 
         /* Animations */
