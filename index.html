@@ -1266,7 +1266,7 @@
     <!-- Script principal (identique à l'original, adapté aux nouveaux IDs de classes si nécessaire, mais les IDs sont conservés) -->
     <script type="module">
         // Import depuis database.js (doit être dans ./js/database.js)
-        import { openDB, saveOperation, getAllOperations, clearAllOperations } from '/path/database.js';
+        import { openDB, saveOperation, getAllOperations, clearAllOperations } from './js/database.js';
 
         // Récupération des éléments DOM (identiques à l'original)
         const qrUpload = document.getElementById('qrUpload');
@@ -1345,7 +1345,7 @@
         let totalTickets = 0;
         let totalRevenue = 0;
         let statusCount = { Premium: 0, Standard: 0, VIP: 0, Autre: 0 };
-        const DEFAULT_BG_IMAGE = '/path/ticket_backgroun.jpg';
+        const DEFAULT_BG_IMAGE = './images/ticket_backgroun.jpg';
         let chartInstance = null;
 
         // ===== FONCTION DE FÊTE (CONFETTIS) =====
@@ -1904,5 +1904,14 @@
     </script>
 
     <!-- Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker enregistré (scope:', reg.scope, ')'))
+                    .catch(err => console.error('Erreur Service Worker:', err));
+            });
+        }
+    </script>
 </body>
 </html>
