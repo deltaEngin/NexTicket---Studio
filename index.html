@@ -404,6 +404,7 @@
         .mode-btn.active {
             background: var(--gradient-primary);
             border-color: var(--color-primary-light);
+            color: #fff;
         }
         .mode-description {
             font-size: 0.875rem;
@@ -659,6 +660,7 @@
             background-position: center;
             border-radius: 1px;
             flex-shrink: 0;
+            margin: 0 auto;
         }
 
         .ticket-card * {
@@ -709,8 +711,8 @@
             margin-top: 15px;
         }
         .qr-container img {
-            width: 150px;
-            height: 150px;
+            width: 130px;
+            height: 130px;
             object-fit: contain;
             background: white;
             margin-bottom: 8px;
@@ -754,10 +756,10 @@
 
         .mini-qr {
             position: absolute;
-            bottom: 18px;
+            bottom: 13px;
             right: 18px;
-            width: 120px;
-            height: 120px;
+            width: 140px;
+            height: 140px;
             background: white;
             border-radius: 2px;
         }
@@ -833,11 +835,11 @@
             font-size: 11px;
             text-transform: uppercase;
         }
-        .status-badge-display.premium { background: #ffd700; color: #000; }
+        .status-badge-display.premium { background: linear-gradient(135deg, #FFE258 0%, #FFB100 100%); color: #000; }
         .status-badge-display.standard { background: #6c757d; color: white; }
         .status-badge-display.vip { background: #9b59b6; color: white; }
         .status-badge-display.vvip { background: #8B0000; color: white; }
-        .status-badge-display.default { background: var(--primary); color: white; }
+        .status-badge-display.default { background: #0054BB; color: white; }
 
         .dates-section {
             display: flex;
@@ -877,7 +879,7 @@
             letter-spacing: 1px;
             color: var(--gray);
             margin-top: auto;
-            margin-right: 140px;
+            margin-right: 190px;
         }
 
         /* Statistiques détaillées */
@@ -1264,7 +1266,7 @@
     <!-- Script principal (identique à l'original, adapté aux nouveaux IDs de classes si nécessaire, mais les IDs sont conservés) -->
     <script type="module">
         // Import depuis database.js (doit être dans ./js/database.js)
-        import { openDB, saveOperation, getAllOperations, clearAllOperations } from './js/database.js';
+        import { openDB, saveOperation, getAllOperations, clearAllOperations } from '/path/database.js';
 
         // Récupération des éléments DOM (identiques à l'original)
         const qrUpload = document.getElementById('qrUpload');
@@ -1343,7 +1345,7 @@
         let totalTickets = 0;
         let totalRevenue = 0;
         let statusCount = { Premium: 0, Standard: 0, VIP: 0, Autre: 0 };
-        const DEFAULT_BG_IMAGE = './images/ticket_backgroun.jpg';
+        const DEFAULT_BG_IMAGE = '/path/ticket_backgroun.jpg';
         let chartInstance = null;
 
         // ===== FONCTION DE FÊTE (CONFETTIS) =====
@@ -1902,14 +1904,5 @@
     </script>
 
     <!-- Service Worker -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('Service Worker enregistré (scope:', reg.scope, ')'))
-                    .catch(err => console.error('Erreur Service Worker:', err));
-            });
-        }
-    </script>
 </body>
 </html>
