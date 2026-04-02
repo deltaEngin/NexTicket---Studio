@@ -43,7 +43,6 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Poppins', sans-serif;
-            
         }
 
         body {
@@ -509,8 +508,8 @@
         }
         .mini-qr {
             position: absolute;
-            bottom: 10px;   /* décalé vers le bas */
-            right: 25px;    /* décalé vers la droite */
+            bottom: 10px;
+            right: 25px;
             width: 120px;
             height: 120px;
         }
@@ -1180,29 +1179,26 @@
         });
     }
 
-    // Appliquer les couleurs à tous les textes sauf le badge
+    // Appliquer les couleurs à tous les textes sauf le badge et la zone ticket-numbers
     function applyTextColors() {
         const textColorValue = textColor ? textColor.value : '#000000';
-        // Cibler tous les éléments textuels du ticket sauf .status-badge-display et ses enfants
-        const allTextElements = ticketCard.querySelectorAll('.label, .value, .main-title, .ticket-numbers span, .stub-info .value, .stub-info .label, .small-label, .date-value, .id-value, .secure-mention, .ticket-pass');
+        // Cibler tous les éléments textuels du ticket sauf .status-badge-display et .ticket-numbers
+        const allTextElements = ticketCard.querySelectorAll('.label, .value, .main-title, .stub-info .value, .stub-info .label, .small-label, .date-value, .id-value, .secure-mention, .ticket-pass');
         allTextElements.forEach(el => {
-            if (!el.closest('.status-badge-display')) {
+            if (!el.closest('.status-badge-display') && !el.closest('.ticket-numbers')) {
                 el.style.color = textColorValue;
             }
         });
-        // Forcer également les éléments spécifiques qui pourraient échapper
+        // Forcer également les éléments spécifiques qui pourraient échapper (hors ticket-numbers)
         if (displayTitle) displayTitle.style.color = textColorValue;
         if (displayStart) displayStart.style.color = textColorValue;
         if (displayEnd) displayEnd.style.color = textColorValue;
         if (displayTime) displayTime.style.color = textColorValue;
         if (displayIdBottom) displayIdBottom.style.color = textColorValue;
-        if (displayTicketNumber) displayTicketNumber.style.color = textColorValue;
-        if (displaySerialNumber) displaySerialNumber.style.color = textColorValue;
-        if (displayTicketNumberLeft) displayTicketNumberLeft.style.color = textColorValue;
-        if (displaySerialNumberLeft) displaySerialNumberLeft.style.color = textColorValue;
         if (displayType) displayType.style.color = textColorValue;
         if (displayLocation) displayLocation.style.color = textColorValue;
         if (displayPrice) displayPrice.style.color = textColorValue;
+        // Ne pas toucher à displayTicketNumber, displaySerialNumber, etc.
     }
 
     function updateTicketDisplay() {
@@ -1292,7 +1288,6 @@
     }
 
     function extractIdFromFilename(name) {
-        // Cherche "Id-" (insensible à la casse) suivi éventuellement d'espaces, puis capture tout jusqu'à la parenthèse ou la fin
         const match = name.match(/Id-\s*([^)]+)/i);
         if (match) return match[1].trim();
         const parenMatch = name.match(/\(\s*([^)]+)\s*\)/i);
