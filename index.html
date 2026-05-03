@@ -883,17 +883,14 @@
                         <button class="mode-btn" id="batchModeBtn"><i class="fas fa-layer-group"></i>Lot multiple</button>
                     </div>
                     <div class="mode-description" id="singleDesc">1 ticket à la fois</div>
-                    <div class="mode-description" id="batchDesc" style="display: none;">Jusqu'à 1000 tickets</div>
+                    <div class="mode-description" id="batchDesc" style="display: none;">Jusqu'à 200 tickets</div>
                     <div class="batch-options" id="batchOptions">
                         <div class="batch-buttons">
                             <button class="batch-btn" data-limit="10">10</button>
                             <button class="batch-btn" data-limit="25">25</button>
                             <button class="batch-btn" data-limit="30">30</button>
                             <button class="batch-btn" data-limit="50">50</button>
-                            <button class="batch-btn" data-limit="200">200</button>
-                            <button class="batch-btn" data-limit="500">500</button>
-                            <button class="batch-btn" data-limit="800">800</button>
-                            <button class="batch-btn active" data-limit="1000">1000</button>
+                            <button class="batch-btn active" data-limit="200">200</button>
                         </div>
                         <div class="zip-info"><i class="fas fa-file-archive"></i> ZIP automatique</div>
                     </div>
@@ -1141,7 +1138,6 @@
 <script type="module">
     import { openDB, saveOperation, getAllOperations, clearAllOperations } from './js/database.js';
 
-    // Récupération des éléments
     const getElem = (id) => document.getElementById(id);
     const qrUpload = getElem('qrUpload');
     const qrUploadArea = getElem('qrUploadArea');
@@ -1217,7 +1213,6 @@
     const detailsBgColor = getElem('detailsBgColor');
     const displayTime = getElem('displayTime');
     const detailsList = getElem('detailsList');
-
     const eventDescription = getElem('eventDescription');
     const displayDescription = getElem('displayDescription');
     const partnerLogoUpload = getElem('partnerLogoUpload');
@@ -1231,7 +1226,7 @@
     const stampRight = getElem('stampRight');
 
     let qrFiles = [];
-    let processedImages = [];
+    let allProcessedImages = [];      // Accumule les tickets du lot EN COURS uniquement
     let currentBatchLimit = null;
     let currentMode = 'single';
     let batchResults = [];
@@ -1241,6 +1236,7 @@
     const DEFAULT_BG_IMAGE = './images/ticket_backgroun.jpg';
     let chartInstance = null;
     let defaultId = null;
+    let globalTicketCounter = 0;      // Compteur CONTINU entre les lots
 
     function celebrate() {
         const duration = 2000;
@@ -1479,23 +1475,19 @@
         return Math.random().toString(36).substring(2,10).toUpperCase();
     }
 
-    // Fonction pour redimensionner une image en préservant la netteté (parfait pour QR codes)
     async function resizeImageToDataURL(file, maxWidth = 300, maxHeight = 300) {
         return new Promise((resolve, reject) => {
             const img = new Image();
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                // Définir la taille cible (on garde le ratio mais on force une taille minimale pour la netteté)
                 let width = img.width;
                 let height = img.height;
                 if (width < maxWidth && height < maxHeight) {
-                    // Agrandir sans flou
                     const scale = Math.max(maxWidth / width, maxHeight / height);
                     width = Math.floor(width * scale);
                     height = Math.floor(height * scale);
                 } else {
-                    // Réduire si nécessaire mais avec un bon algorithme
                     if (width > maxWidth) {
                         height = Math.floor((maxWidth / width) * height);
                         width = maxWidth;
@@ -1507,10 +1499,9 @@
                 }
                 canvas.width = width;
                 canvas.height = height;
-                // Désactiver le lissage pour les images pixelisées (QR codes)
                 ctx.imageSmoothingEnabled = false;
                 ctx.drawImage(img, 0, 0, width, height);
-                resolve(canvas.toDataURL('image/png')); // PNG pour préserver la transparence éventuelle
+                resolve(canvas.toDataURL('image/png'));
             };
             img.onerror = reject;
             img.src = URL.createObjectURL(file);
@@ -1589,16 +1580,20 @@
         if (fileList) fileList.innerHTML = '';
         if (qrUpload) qrUpload.value = '';
         if (processBtn) processBtn.disabled = true;
-        if (downloadAllBtn) downloadAllBtn.disabled = true;
+        // Ne pas toucher à allProcessedImages ici (géré ailleurs)
         if (!defaultId) defaultId = generateUniqueId();
         if (idDisplay) idDisplay.innerHTML = `<i class="fas fa-id-card" style="color:var(--success);"></i> ID: <strong>${defaultId}</strong>`;
         if (currentIdEl) currentIdEl.textContent = defaultId;
         if (displayIdBottom) displayIdBottom.innerText = defaultId;
         if (displayIdLeft) displayIdLeft.innerText = defaultId;
         updateQRCodeFromData();
-        if (displayTicketNumber) displayTicketNumber.innerText = '001';
+        
+        // Utiliser le compteur global pour afficher le prochain numéro de ticket
+        const nextTicketNumber = String(globalTicketCounter + 1).padStart(3, '0');
+        if (displayTicketNumber) displayTicketNumber.innerText = nextTicketNumber;
+        if (displayTicketNumberLeft) displayTicketNumberLeft.innerText = nextTicketNumber;
+        
         if (displaySerialNumber) displaySerialNumber.innerText = generateSerial();
-        if (displayTicketNumberLeft) displayTicketNumberLeft.innerText = '001';
         if (displaySerialNumberLeft) displaySerialNumberLeft.innerText = displaySerialNumber ? displaySerialNumber.innerText : '';
         if (progressContainer) progressContainer.style.display = 'none';
         if (progressBar) progressBar.style.width = '0%';
@@ -1658,13 +1653,11 @@
             div.innerHTML = `<div class="file-name"><i class="fas fa-qrcode"></i> ${f.name}</div><div class="extracted-id">${id}</div>`;
             if (fileList) fileList.appendChild(div);
             
-            // Prétraiter l'image pour une qualité nette
             try {
                 const highResDataUrl = await resizeImageToDataURL(f, 300, 300);
                 qrFiles.push({ file: f, id, index: idx, highResDataUrl });
             } catch(e) {
                 console.warn('Erreur redimensionnement', e);
-                // fallback : utiliser le fichier brut
                 qrFiles.push({ file: f, id, index: idx, highResDataUrl: null });
             }
         }
@@ -1677,7 +1670,6 @@
             if (displayIdBottom) displayIdBottom.innerText = first.id;
             if (displayIdLeft) displayIdLeft.innerText = first.id;
             
-            // Afficher l'image redimensionnée
             const srcToUse = first.highResDataUrl || (await new Promise(res => {
                 const r = new FileReader();
                 r.onload = e => res(e.target.result);
@@ -1685,6 +1677,11 @@
             }));
             if (qrCodeImg) qrCodeImg.src = srcToUse;
             if (miniQrCodeImg) miniQrCodeImg.src = srcToUse;
+            
+            // Mettre à jour l'aperçu avec le prochain numéro de ticket
+            const nextTicketNumber = String(globalTicketCounter + 1).padStart(3, '0');
+            if (displayTicketNumber) displayTicketNumber.innerText = nextTicketNumber;
+            if (displayTicketNumberLeft) displayTicketNumberLeft.innerText = nextTicketNumber;
             
             if (currentMode==='batch' && batchSizeEl) batchSizeEl.textContent = `${qrFiles.length} / ${currentBatchLimit || '∞'}`;
         } else {
@@ -1704,7 +1701,6 @@
                 if (displayTicketNumberLeft) displayTicketNumberLeft.innerText = ticketNumber;
                 if (displaySerialNumberLeft) displaySerialNumberLeft.innerText = serialNumber;
 
-                // Utiliser l'image haute résolution si disponible
                 let qrImageSrc;
                 if (qrFile.highResDataUrl) {
                     qrImageSrc = qrFile.highResDataUrl;
@@ -1744,11 +1740,20 @@
         return `${minutes} min ${remainingSeconds} s`;
     }
 
+    // ========== BOUTON TRAITER ==========
     if (processBtn) {
         processBtn.addEventListener('click', async () => {
             if (!qrFiles.length) return showAlert('error','Aucun fichier','Chargez des QR codes');
+
+            // 🛑 Vérifie qu'aucun lot précédent n'est en attente de téléchargement
+            if (allProcessedImages.length > 0) {
+                showAlert('warning', 'Lot précédent non téléchargé', 
+                          'Veuillez d\'abord télécharger le lot en cours (bouton Télécharger) ou cliquez sur Nouveau pour recommencer.');
+                return;
+            }
+
             setButtonLoading(processBtn, true);
-            processedImages = [];
+            const currentBatchImages = [];
             batchResults = [];
             if (progressContainer) progressContainer.style.display = 'block';
             if (progressBar) progressBar.style.width = '0%';
@@ -1760,12 +1765,13 @@
             const statusVal = statusInput ? statusInput.value : 'Premium';
             
             const startTime = Date.now();
+            const startIndex = globalTicketCounter;  // Début du compteur pour ce lot
             
             for (let i = 0; i < total; i++) {
-                const ticketStart = Date.now();
                 try {
-                    const res = await processQRCode(qrFiles[i], i);
-                    processedImages.push(res);
+                    // Utiliser l'index global pour la numérotation
+                    const res = await processQRCode(qrFiles[i], startIndex + i);
+                    currentBatchImages.push(res);
                     completed++;
                     batchResults.push({ originalName: res.originalName, id: res.id });
                     
@@ -1802,6 +1808,12 @@
             const endTime = Date.now();
             const totalDuration = endTime - startTime;
             
+            // Mise à jour du compteur global après le lot
+            globalTicketCounter += completed;
+            
+            // Stocker uniquement le lot en cours
+            allProcessedImages = currentBatchImages;
+            
             totalTickets += completed;
             totalRevenue += completed * price;
             if (statusVal.toLowerCase().includes('vvip') || statusVal.toLowerCase().includes('vip')) statusCount.VIP += completed;
@@ -1821,10 +1833,15 @@
             if (currentMode==='batch' && batchResults.length) showBatchResults();
             showAlert(errors ? 'warning' : 'success', errors ? 'Partiel' : 'Succès', 
                 `${completed} tickets générés en ${formatTime(totalDuration)}. ${errors} erreurs.`);
-            if (downloadAllBtn) downloadAllBtn.disabled = false;
+            if (downloadAllBtn) downloadAllBtn.disabled = false; // activer le téléchargement
             if (progressText) progressText.innerHTML = `Terminé: ${completed} succès, ${errors} erreurs. Durée totale: ${formatTime(totalDuration)}.`;
             setButtonLoading(processBtn, false);
             await loadStatsFromDB();
+            
+            // Mettre à jour l'aperçu avec le prochain numéro après traitement
+            const nextTicketNumber = String(globalTicketCounter + 1).padStart(3, '0');
+            if (displayTicketNumber) displayTicketNumber.innerText = nextTicketNumber;
+            if (displayTicketNumberLeft) displayTicketNumberLeft.innerText = nextTicketNumber;
         });
     }
 
@@ -1864,27 +1881,38 @@
         });
     }
 
+    // ========== BOUTON TÉLÉCHARGER (ZIP) ==========
     if (downloadAllBtn) {
         downloadAllBtn.addEventListener('click', async () => {
-            if (!processedImages.length) return showAlert('error','Aucune image');
+            if (!allProcessedImages.length) return showAlert('error','Aucune image','Aucun ticket généré à télécharger.');
             setButtonLoading(downloadAllBtn, true);
-            if (currentMode === 'single') {
-                downloadImage(processedImages[0].dataUrl, processedImages[0].fileName);
-                celebrate();
-            } else {
-                try {
+            try {
+                if (currentMode === 'single' && allProcessedImages.length === 1) {
+                    downloadImage(allProcessedImages[0].dataUrl, allProcessedImages[0].fileName);
+                } else {
                     const zip = new JSZip();
                     const folder = zip.folder('tickets');
-                    processedImages.forEach(img => {
+                    allProcessedImages.forEach(img => {
                         const data = img.dataUrl.split(',')[1];
                         folder.file(img.fileName, b64toBlob(data, 'image/jpeg'));
                     });
                     const blob = await zip.generateAsync({ type: 'blob' });
-                    saveAs(blob, `tickets_${Date.now()}.zip`);
-                    celebrate();
-                } catch (e) { showAlert('error','Erreur ZIP',e.message); }
+                    // 🎯 Le nom du ZIP reflète le total cumulé (globalTicketCounter)
+                    saveAs(blob, `ticket_lot_${globalTicketCounter}.zip`);
+                }
+                celebrate();
+
+                // 🧹 Libération de la mémoire après téléchargement réussi
+                allProcessedImages = [];
+                if (downloadAllBtn) downloadAllBtn.disabled = true;
+                showAlert('success', 'Mémoire libérée', 
+                    'Le lot a été téléchargé. Vous pouvez charger de nouveaux QR codes pour le prochain lot.');
+
+            } catch (e) {
+                showAlert('error','Erreur ZIP',e.message);
+            } finally {
+                setButtonLoading(downloadAllBtn, false);
             }
-            setButtonLoading(downloadAllBtn, false);
         });
     }
 
@@ -1908,18 +1936,22 @@
 
     if (resetBtn) {
         resetBtn.addEventListener('click', () => {
-            qrFiles = []; processedImages = []; batchResults = [];
+            qrFiles = []; 
+            allProcessedImages = [];   // Vider l'accumulation
+            batchResults = [];
             defaultId = generateUniqueId();
+            globalTicketCounter = 0;   // Remise à zéro du compteur global
             resetFileSelection();
             loadStatsFromDB();
             currentMode = 'single';
             updateModeDisplay('single');
-            const activeBatch = document.querySelector('.batch-btn[data-limit="1000"]');
+            const activeBatch = document.querySelector('.batch-btn[data-limit="200"]');
             if (activeBatch) activeBatch.classList.add('active');
             if (ticketCard) ticketCard.style.backgroundImage = `url('${DEFAULT_BG_IMAGE}')`;
             if (partnerLogoUpload) partnerLogoUpload.value = '';
             if (partnerLogoContainer) partnerLogoContainer.style.display = 'none';
             if (partnerLogoImg) partnerLogoImg.src = '';
+            if (downloadAllBtn) downloadAllBtn.disabled = true;
             showAlert('success','Réinitialisé','Prêt pour une nouvelle opération');
         });
     }
