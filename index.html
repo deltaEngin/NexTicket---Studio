@@ -13,6 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --color-primary: #2563eb;
@@ -43,7 +44,6 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Poppins', sans-serif;
-        
         }
 
         body {
@@ -174,7 +174,7 @@
             font-size: 1.5rem;
             cursor: pointer;
         }
-        .side-menu .nav-btn, .sidebar-nav .nav-btn {
+        .side-menu .nav-btn {
             width: 100%;
             display: flex;
             align-items: center;
@@ -188,11 +188,11 @@
             margin-bottom: 0.5rem;
             text-align: left;
         }
-        .side-menu .nav-btn:hover, .sidebar-nav .nav-btn:hover {
+        .side-menu .nav-btn:hover {
             background: rgba(59,130,246,0.1);
             color: var(--color-text);
         }
-        .side-menu .nav-btn.active, .sidebar-nav .nav-btn.active {
+        .side-menu .nav-btn.active {
             background: rgba(59,130,246,0.15);
             color: var(--color-primary-light);
         }
@@ -206,7 +206,7 @@
         }
         .overlay.show { display: block; }
 
-        /* Layout principal */
+        /* Layout principal - plus de sidebar fixe */
         .main-layout {
             display: flex;
             flex: 1;
@@ -214,22 +214,11 @@
             margin: 0 auto;
             width: 100%;
             padding: 1.5rem;
-            gap: 1.5rem;
         }
-        .main-content { flex: 1; overflow-y: auto; }
-        .sidebar-nav {
-            width: 220px;
-            background: var(--gradient-surface);
-            border-right: 1px solid var(--color-border);
-            border-radius: var(--radius-lg);
-            padding: 1rem 0.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            box-shadow: var(--shadow-md);
-            height: fit-content;
-            position: sticky;
-            top: 90px;
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            width: 100%;
         }
         .page { display: none; }
         .page.active { display: block; }
@@ -308,7 +297,7 @@
             color: white;
         }
 
-        /* Stats */
+        /* Stats grid existante */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -325,7 +314,93 @@
         .stat-card i { font-size: 2rem; color: var(--color-primary-light); margin-bottom: 0.5rem; }
         .stat-card h3 { font-size: 2rem; font-weight: 700; color: var(--color-text); }
 
-        /* Panels */
+        /* Nouvelles cartes stats page */
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card-modern {
+            background: var(--color-surface);
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            border: 1px solid var(--color-border);
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s;
+        }
+        .stat-card-modern:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+        .stat-card-modern .card-icon { font-size: 2rem; color: var(--color-primary-light); margin-bottom: 0.75rem; }
+        .stat-card-modern h4 { font-size: 0.9rem; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 0.5rem; }
+        .stat-card-modern .stat-number { font-size: 2rem; font-weight: 800; color: var(--color-text); }
+
+        /* Graphiques */
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        .chart-box {
+            background: var(--color-surface);
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            border: 1px solid var(--color-border);
+            box-shadow: var(--shadow-md);
+        }
+        .chart-box h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.2rem;
+            margin-bottom: 1.2rem;
+        }
+        canvas { max-height: 280px; width: 100%; }
+
+        /* Settings page */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        .settings-card {
+            background: var(--color-surface);
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            border: 1px solid var(--color-border);
+            box-shadow: var(--shadow-sm);
+        }
+        .settings-card h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--color-border);
+            font-size: 1.2rem;
+        }
+        .settings-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.6rem 0;
+            border-bottom: 1px dashed var(--color-border);
+        }
+        .settings-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+        .version-badge {
+            background: var(--color-secondary);
+            padding: 0.25rem 0.8rem;
+            border-radius: var(--radius-full);
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-top: 1rem;
+        }
+
+        /* Panels et formulaires */
         .content-area {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -337,7 +412,7 @@
             border-radius: var(--radius-xl);
             padding: 1.5rem;
             border: 1px solid var(--color-border);
-            box-shadow: var(--shadow-lg); /* Ombre légère renforcée */
+            box-shadow: var(--shadow-lg);
             overflow-x: auto;
         }
         .panel-title {
@@ -350,17 +425,13 @@
         }
         .panel-title i { font-size: 1.5rem; color: var(--color-primary-light); }
         .panel-title h3 { font-size: 1.25rem; font-weight: 600; }
-
-        /* Formulaire : 3 colonnes sur desktop pour une disposition horizontale */
         .ticket-fields {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
-        .full-width {
-            grid-column: span 3; /* occupe les 3 colonnes */
-        }
+        .full-width { grid-column: span 3; }
         .form-group { margin-bottom: 1.5rem; }
         .form-label {
             display: block;
@@ -401,15 +472,9 @@
             background: rgba(59, 130, 246, 0.02);
         }
         .file-upload i { font-size: 3rem; color: var(--color-primary-light); margin-bottom: 1rem; }
-        /* Bouton d'import stylisé */
         .file-upload .btn-primary {
             margin-top: 1rem;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            transition: all 0.2s;
-        }
-        .file-upload .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 15px rgba(37, 99, 235, 0.2);
         }
         .file-list {
             max-height: 200px;
@@ -459,7 +524,7 @@
             margin-top: 1.5rem;
         }
 
-        /* Ticket */
+        /* Ticket preview */
         .preview-container {
             background: var(--color-secondary);
             border-radius: var(--radius-lg);
@@ -476,22 +541,17 @@
             font-family: 'Montserrat', sans-serif;
             background-size: cover;
             background-position: center;
-            flex-shrink: 0;   
+            flex-shrink: 0;
         }
         .ticket-card * { font-family: 'Montserrat', sans-serif; }
         .ticket-body { display: flex; min-height: 280px; }
-        .ticket-pass {
-            font-weight: 900;
-            line-height: 1.2;
-            letter-spacing: 1.8px;
-        }
         .ticket-left {
             flex: 0 0 200px;
             display: flex;
             flex-direction: column;
             align-items: flex-end;
             padding: 15px 20px 15px 30px;
-            border-right: 1.8px dashed #FFFFFF; /* Couleur par défaut, sera modifiée via JS */
+            border-right: 1.8px dashed #FFFFFF;
             background: rgba(255,255,255,0.1);
             backdrop-filter: blur(1px);
         }
@@ -508,9 +568,8 @@
             object-fit: contain;
             background: white;
             margin-bottom: 8px;
-            image-rendering: crisp-edges; /* Neteté pour QR code */
+            image-rendering: crisp-edges;
         }
-        /* Conteneur du logo partenaire (maintenant dans la partie droite) */
         .partner-logo-container {
             position: absolute;
             bottom: 78px;
@@ -551,6 +610,9 @@
             gap: 8px;
             position: relative;
         }
+        .ticket-pass {
+            font-weight : 700;
+       }
         .mini-qr {
             position: absolute;
             bottom: 155px;
@@ -558,12 +620,7 @@
             width: 168px;
             height: 168px;
         }
-        .mini-qr img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: contain; 
-            image-rendering: crisp-edges; /* Neteté */
-        }
+        .mini-qr img { width: 100%; height: 100%; object-fit: contain; image-rendering: crisp-edges; }
         .title-row {
             display: flex;
             justify-content: space-between;
@@ -590,7 +647,7 @@
             border-radius: 8px;
             padding: 8px 12px;
             margin-top: 12px;
-            width : 68%;
+            width: 68%;
         }
         .detail-row {
             display: flex;
@@ -622,19 +679,18 @@
         .status-badge-display.vvip { background: #8B0000; color: white; }
         .status-badge-display.default { background: #0054BB; color: white; }
         .status-badge-display.pass { background: linear-gradient(135deg, #FF8C00, #FFA500); color: white; }
-
         .dates-section {
             display: flex;
             gap: 70px;
             margin-top: 4px;
             margin-bottom: 15px;
             flex-wrap: wrap;
-            width : 65%;
+            width: 65%;
         }
         .id-section {
-          margin-right: 10px;
-          width : 30%;
-          font-size : 1.5rem;
+            margin-right: 10px;
+            width: 30%;
+            font-size: 1.5rem;
         }
         .date-item { display: flex; flex-direction: column; }
         .small-label { font-size: 11px; font-weight: 600; text-transform: uppercase; }
@@ -648,8 +704,6 @@
             font-weight: 500;
             margin-right: 10px;
         }
-
-        /* Description miniature */
         .event-description {
             font-size: 9px;
             line-height: 1.3;
@@ -659,9 +713,8 @@
             font-style: italic;
             border-top: 0.5px dashed currentColor;
             padding-top: 6px;
+            font-weight: 600;
         }
-
-        /* Tampons d'authenticité */
         .authenticity-stamp {
             position: absolute;
             bottom: 35px;
@@ -682,18 +735,7 @@
             z-index: 10;
         }
 
-        .stamp-left {
-            position: relative;
-            align-self: flex-start;
-            margin-top: 25px;
-            margin-left: 5px;
-            font-size: 10px;  /* plus grand */
-            padding: 6px 12px;
-            transform: rotate(3deg);
-            border-width: 2.5px;
-        }
-
-        /* Alertes (en haut à droite) */
+        /* Alertes */
         #alertsContainer {
             position: fixed;
             top: 20px;
@@ -713,12 +755,9 @@
             gap: 0.75rem;
             color: var(--color-text);
         }
-        .mt{
-         font-size : 1.8rem;
-         font-weight: 800;
-        }
+        .mt { font-size: 1.8rem; font-weight: 800; }
 
-        /* Modal de confirmation */
+        /* Modal */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -747,7 +786,7 @@
         .confirm-btn { background: var(--color-danger); color: white; border: none; }
         .cancel-btn { background: var(--color-secondary); color: var(--color-text); border: 1px solid var(--color-border); }
 
-        /* Panneau des résultats batch */
+        /* Batch results panel */
         .batch-results-panel {
             position: fixed;
             bottom: 20px;
@@ -820,23 +859,17 @@
             font-size: 1.5rem;
         }
 
-        /* Responsive */
         @media (max-width: 992px) {
-            .sidebar-nav { display: none; }
-            .hamburger-btn { display: flex; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .content-area { grid-template-columns: 1fr; }
             .reset-section { grid-template-columns: 1fr; }
+            .charts-container { grid-template-columns: 1fr; }
         }
         @media (max-width: 768px) {
             .mode-buttons { flex-direction: column; }
             .stats-grid { grid-template-columns: 1fr; }
-            .ticket-fields {
-                grid-template-columns: 1fr;
-            }
-            .full-width {
-                grid-column: span 1;
-            }
+            .ticket-fields { grid-template-columns: 1fr; }
+            .full-width { grid-column: span 1; }
             .action-buttons { grid-template-columns: 1fr; }
             .batch-results-panel { width: 90%; right: 5%; left: 5%; bottom: 10px; }
         }
@@ -863,19 +896,13 @@
     <div class="overlay" id="overlay"></div>
 
     <div class="main-layout">
-        <nav class="sidebar-nav" id="sidebarNav">
-            <button class="nav-btn active" data-page="generatePage"><i class="fas fa-qrcode"></i><span>Générer</span></button>
-            <button class="nav-btn" data-page="statsPage"><i class="fas fa-chart-bar"></i><span>Statistiques</span></button>
-            <button class="nav-btn" data-page="settingsPage"><i class="fas fa-database"></i><span>Stockage</span></button>
-        </nav>
-
         <main class="main-content">
+            <!-- Page Générer -->
             <section class="page active" id="generatePage">
                 <div class="page-header">
                     <h2 class="page-title"><i class="fas fa-magic"></i> Studio de création</h2>
                     <p class="page-subtitle">Générez vos tickets personnalisés en quelques clics</p>
                 </div>
-
                 <div class="mode-card">
                     <h3><i class="fas fa-download"></i> Mode de génération</h3>
                     <div class="mode-buttons">
@@ -895,173 +922,53 @@
                         <div class="zip-info"><i class="fas fa-file-archive"></i> ZIP automatique</div>
                     </div>
                 </div>
-
                 <div class="stats-grid">
                     <div class="stat-card"><i class="fas fa-ticket-alt"></i><h3 id="totalProcessed">0</h3><p>Tickets générés</p></div>
                     <div class="stat-card"><i class="fas fa-id-card"></i><h3 id="currentId">--</h3><p>ID en cours</p></div>
                     <div class="stat-card"><i class="fas fa-layer-group"></i><h3 id="batchSize">--</h3><p>Taille lot</p></div>
                     <div class="stat-card"><i class="fas fa-check-circle"></i><h3 id="successRate">100%</h3><p>Réussite</p></div>
                 </div>
-
                 <div class="content-area">
-                    <!-- Colonne configuration -->
                     <div class="panel">
                         <div class="panel-title"><i class="fas fa-sliders-h"></i><h3>Configuration</h3></div>
-                        <!-- Grille de 3 colonnes, éléments réorganisés horizontalement -->
                         <div class="ticket-fields">
-                            <!-- Événement (pleine largeur) -->
-                            <div class="full-width">
-                                <label class="form-label"><i class="fas fa-heading"></i> Événement</label>
-                                <input type="text" id="eventTitle" class="form-control" value="Music Festival">
-                            </div>
-                            <!-- Ligne 1 : Début, Fin, Lieu -->
-                            <div>
-                                <label class="form-label"><i class="fas fa-calendar-alt"></i> Début</label>
-                                <input type="date" id="startDate" class="form-control" value="2025-06-03">
-                            </div>
-                            <div>
-                                <label class="form-label"><i class="fas fa-calendar-alt"></i> Fin</label>
-                                <input type="date" id="endDate" class="form-control" value="2025-06-03">
-                            </div>
-                            <div>
-                                <label class="form-label"><i class="fas fa-map-marker-alt"></i> Lieu</label>
-                                <input type="text" id="location" class="form-control" value="France, Paris">
-                            </div>
-                            <!-- Ligne 2 : Type, Statut, Prix -->
-                            <div>
-                                <label class="form-label"><i class="fas fa-tag"></i> Type</label>
-                                <input type="text" id="eventType" class="form-control" value="Evènement">
-                            </div>
-                            <div>
-                                <label class="form-label"><i class="fas fa-star"></i> Statut</label>
-                                <select id="status" class="form-select">
-                                    <option value="Premium" selected>Premium</option>
-                                    <option value="Standard">Standard</option>
-                                    <option value="VIP">VIP</option>
-                                    <option value="VVIP">VVIP</option>
-                                    <option value="Simple">Simple</option>
-                                    <option value="Pass">Pass</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="form-label"><i class="fas fa-euro-sign"></i> Prix</label>
-                                <input type="text" id="price" class="form-control" value="5000 XOF">
-                            </div>
-                            <!-- Ligne 3 : Heure, case à cocher (2 colonnes) -->
-                            <div>
-                                <label class="form-label"><i class="fas fa-clock"></i> Heure</label>
-                                <input type="time" id="eventTime" class="form-control" value="20:00">
-                            </div>
-                            <div style="grid-column: span 2; display: flex; align-items: center;">
-                                <label class="form-label" style="margin-bottom: 0; margin-right: 12px;"><i class="fas fa-calendar-check"></i> Événement sur un seul jour</label>
-                                <input type="checkbox" id="singleDayEvent" style="transform: scale(1.2);"> 
-                                <span style="margin-left: 8px;">Utiliser la même date pour début et fin</span>
-                            </div>
-                            <!-- Description (pleine largeur) -->
-                            <div class="full-width">
-                                <label class="form-label"><i class="fas fa-align-left"></i> Description (miniature)</label>
-                                <textarea id="eventDescription" class="form-control" rows="2" placeholder="Ex: Afterwork, Dress code, Infos pratiques...">Soirée exceptionnelle - Tenue chic exigée</textarea>
-                            </div>
-                            <!-- Ligne 4 : Image de fond, Couleur texte, Couleur fond détails -->
-                            <div>
-                                <label class="form-label"><i class="fas fa-image"></i> Image de fond</label>
-                                <input type="file" id="backgroundUpload" accept="image/*" style="width:100%;">
-                                <button id="resetBackgroundBtn" class="btn btn-sm btn-secondary" style="margin-top:5px;">Réinitialiser fond</button>
-                            </div>
-                            <div>
-                                <label class="form-label"><i class="fas fa-palette"></i> Couleur du texte</label>
-                                <input type="color" id="textColor" value="#000000" style="width:100%; height:38px;">
-                            </div>
-                            <div>
-                                <label class="form-label"><i class="fas fa-fill-drip"></i> Couleur fond détails</label>
-                                <input type="color" id="detailsBgColor" value="#ffffff" style="width:100%; height:38px;">
-                            </div>
-                            <!-- Ligne 5 : Couleur tampon, Couleur séparateur, Logo partenaire -->
-                            <div>
-                                <label class="form-label"><i class="fas fa-stamp"></i> Couleur tampon</label>
-                                <input type="color" id="stampColor" value="#1e3a8a" style="width:100%; height:38px;">
-                            </div>
-                            <div>
-                                <label class="form-label"><i class="fas fa-grip-lines-vertical"></i> Couleur séparateur</label>
-                                <input type="color" id="dividerColor" value="#ffffff" style="width:100%; height:38px;">
-                            </div>
-                            <div>
-                                <label class="form-label"><i class="fas fa-handshake"></i> Logo partenaire</label>
-                                <input type="file" id="partnerLogoUpload" accept="image/*" style="width:100%;">
-                                <button id="resetPartnerLogoBtn" class="btn btn-sm btn-secondary" style="margin-top:5px;">Supprimer logo</button>
-                            </div>
+                            <div class="full-width"><label class="form-label"><i class="fas fa-heading"></i> Événement</label><input type="text" id="eventTitle" class="form-control" value="Music Festival"></div>
+                            <div><label class="form-label"><i class="fas fa-calendar-alt"></i> Début</label><input type="date" id="startDate" class="form-control" value="2025-06-03"></div>
+                            <div><label class="form-label"><i class="fas fa-calendar-alt"></i> Fin</label><input type="date" id="endDate" class="form-control" value="2025-06-03"></div>
+                            <div><label class="form-label"><i class="fas fa-map-marker-alt"></i> Lieu</label><input type="text" id="location" class="form-control" value="France, Paris"></div>
+                            <div><label class="form-label"><i class="fas fa-tag"></i> Type</label><input type="text" id="eventType" class="form-control" value="Evènement"></div>
+                            <div><label class="form-label"><i class="fas fa-star"></i> Statut</label><select id="status" class="form-select"><option value="Premium" selected>Premium</option><option value="Standard">Standard</option><option value="VIP">VIP</option><option value="VVIP">VVIP</option><option value="Simple">Simple</option><option value="Pass">Pass</option></select></div>
+                            <div><label class="form-label"><i class="fas fa-euro-sign"></i> Prix</label><input type="text" id="price" class="form-control" value="5000 XOF"></div>
+                            <div><label class="form-label"><i class="fas fa-clock"></i> Heure</label><input type="time" id="eventTime" class="form-control" value="20:00"></div>
+                            <div style="grid-column: span 2; display: flex; align-items: center;"><label class="form-label" style="margin-bottom:0; margin-right:12px;"><i class="fas fa-calendar-check"></i> Événement sur un seul jour</label><input type="checkbox" id="singleDayEvent" style="transform:scale(1.2);"> <span style="margin-left:8px;">Utiliser la même date pour début et fin</span></div>
+                            <div class="full-width"><label class="form-label"><i class="fas fa-align-left"></i> Description (miniature)</label><textarea id="eventDescription" class="form-control" rows="2">Soirée exceptionnelle - Tenue chic exigée</textarea></div>
+                            <div><label class="form-label"><i class="fas fa-image"></i> Image de fond</label><input type="file" id="backgroundUpload" accept="image/*" style="width:100%;"><button id="resetBackgroundBtn" class="btn btn-sm btn-secondary" style="margin-top:5px;">Réinitialiser fond</button></div>
+                            <div><label class="form-label"><i class="fas fa-palette"></i> Couleur du texte</label><input type="color" id="textColor" value="#000000" style="width:100%; height:38px;"></div>
+                            <div><label class="form-label"><i class="fas fa-fill-drip"></i> Couleur fond détails</label><input type="color" id="detailsBgColor" value="#ffffff" style="width:100%; height:38px;"></div>
+                            <div><label class="form-label"><i class="fas fa-stamp"></i> Couleur tampon</label><input type="color" id="stampColor" value="#1e3a8a" style="width:100%; height:38px;"></div>
+                            <div><label class="form-label"><i class="fas fa-grip-lines-vertical"></i> Couleur séparateur</label><input type="color" id="dividerColor" value="#ffffff" style="width:100%; height:38px;"></div>
+                            <div><label class="form-label"><i class="fas fa-handshake"></i> Logo partenaire</label><input type="file" id="partnerLogoUpload" accept="image/*" style="width:100%;"><button id="resetPartnerLogoBtn" class="btn btn-sm btn-secondary" style="margin-top:5px;">Supprimer logo</button></div>
                         </div>
-
-                        <div class="form-group">
-                            <label class="form-label"><i class="fas fa-id-card"></i> ID extrait</label>
-                            <div id="idDisplay" class="phone-display"><i class="fas fa-sync-alt"></i> En attente...</div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label"><i class="fas fa-qrcode"></i> QR Codes</label>
-                            <div class="file-upload" id="qrUploadArea">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                                <p>Glissez-déposez vos QR codes</p>
-                                <p style="font-size:14px;">ou cliquez pour sélectionner</p>
-                                <input type="file" id="qrUpload" accept="image/*" multiple style="display:none;">
-                                <button class="btn btn-primary" style="max-width:200px; margin:0 auto;"><i class="fas fa-folder-open"></i> Parcourir</button>
-                            </div>
-                            <div id="fileList" class="file-list"></div>
-                            <div class="progress-container" id="progressContainer">
-                                <div class="progress-bar" id="progressBar"></div>
-                            </div>
-                            <div class="progress-text" id="progressText"></div>
-                        </div>
-
-                        <div class="action-buttons">
-                            <button id="processBtn" class="btn btn-success" disabled><i class="fas fa-play"></i> Traiter</button>
-                            <button id="downloadAllBtn" class="btn btn-primary" disabled><i class="fas fa-download"></i> Télécharger</button>
-                        </div>
-
-                        <div class="reset-section">
-                            <button id="resetBtn" class="btn btn-warning"><i class="fas fa-redo-alt"></i> Nouveau</button>
-                            <button id="exportDataBtn" class="btn btn-success"><i class="fas fa-file-export"></i> Exporter</button>
-                            <button id="clearDataBtn" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Effacer tout</button>
-                        </div>
+                        <div class="form-group"><label class="form-label"><i class="fas fa-id-card"></i> ID extrait</label><div id="idDisplay" class="phone-display"><i class="fas fa-sync-alt"></i> En attente...</div></div>
+                        <div class="form-group"><label class="form-label"><i class="fas fa-qrcode"></i> QR Codes</label><div class="file-upload" id="qrUploadArea"><i class="fas fa-cloud-upload-alt"></i><p>Glissez-déposez vos QR codes</p><p style="font-size:14px;">ou cliquez pour sélectionner</p><input type="file" id="qrUpload" accept="image/*" multiple style="display:none;"><button class="btn btn-primary" style="max-width:200px; margin:0 auto;"><i class="fas fa-folder-open"></i> Parcourir</button></div><div id="fileList" class="file-list"></div><div class="progress-container" id="progressContainer"><div class="progress-bar" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
+                        <div class="action-buttons"><button id="processBtn" class="btn btn-success" disabled><i class="fas fa-play"></i> Traiter</button><button id="downloadAllBtn" class="btn btn-primary" disabled><i class="fas fa-download"></i> Télécharger</button></div>
+                        <div class="reset-section"><button id="resetBtn" class="btn btn-warning"><i class="fas fa-redo-alt"></i> Nouveau</button><button id="exportDataBtn" class="btn btn-success"><i class="fas fa-file-export"></i> Exporter</button><button id="clearDataBtn" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Effacer tout</button></div>
                     </div>
-
-                    <!-- Colonne aperçu -->
                     <div class="panel">
                         <div class="panel-title"><i class="fas fa-eye"></i><h3>Aperçu</h3></div>
                         <div class="preview-container">
                             <div class="ticket-card" id="ticketCard" style="background-image: url('./images/ticket_backgroun.jpg');">
                                 <div class="ticket-body">
                                     <div class="ticket-left" id="ticketLeftDivider">
-                                        <div class="qr-container">
-                                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=TICKET" alt="QR" id="qrCodeImg">
-                                            <span class="ticket-pass">Ticket Pass</span>
-                                        </div>
-                                        <div class="stub-info">
-                                            <div><span class="label">N°</span><span class="value" id="displayTicketNumberLeft">001</span></div>
-                                            <div><span class="label">Série</span><span class="value" id="displaySerialNumberLeft">EX123AB7</span></div>
-                                            <div><span class="label">ID</span><span class="value" id="displayIdLeft">--</span></div>
-                                        </div>
+                                        <div class="qr-container"><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=TICKET" alt="QR" id="qrCodeImg"><span class="ticket-pass">Ticket Pass</span></div>
+                                        <div class="stub-info"><div><span class="label">N°</span><span class="value" id="displayTicketNumberLeft">001</span></div><div><span class="label">Série</span><span class="value" id="displaySerialNumberLeft">EX123AB7</span></div><div><span class="label">ID</span><span class="value" id="displayIdLeft">--</span></div></div>
                                     </div>
                                     <div class="ticket-right">
                                         <div class="mini-qr"><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=TICKET" alt="mini QR" id="miniQrCodeImg"></div>
-                                        <div id="partnerLogoContainer" class="partner-logo-container" style="display: none;">
-                                            <img id="partnerLogoImg" src="" alt="Logo partenaire">
-                                        </div>
-                                        <div class="title-row">
-                                            <div class="main-title" id="displayTitle">Music Festival</div>
-                                            <div class="ticket-numbers"><span>N° <span id="displayTicketNumber">001</span></span><span>Série <span id="displaySerialNumber">EX123AB7</span></span></div>
-                                        </div>
-                                        <div class="details-list" id="detailsList">
-                                            <div class="detail-row"><span class="label">Type</span><span class="value" id="displayType">Evènement</span></div>
-                                            <div class="detail-row"><span class="label">Statut</span><span class="value"><span id="displayStatus" class="status-badge-display default">Premium</span></span></div>
-                                            <div class="detail-row"><span class="label">Lieu</span><span class="value" id="displayLocation">France, Paris</span></div>
-                                            <div class="detail-row"><span class="label">Prix</span><span class="value mt" id="displayPrice">5000 XOF</span></div>
-                                        </div>
-                                        <div class="dates-section">
-                                            <div class="date-item"><span class="small-label">Début :</span><span class="date-value" id="displayStart">03 Juin 2025</span></div>
-                                            <div class="date-item"><span class="small-label">Fin :</span><span class="date-value" id="displayEnd">03 Juin 2025</span></div>
-                                            <div class="date-item"><span class="small-label">Heure :</span><span class="date-value" id="displayTime">20:00</span></div>
-                                        </div>
+                                        <div id="partnerLogoContainer" class="partner-logo-container" style="display: none;"><img id="partnerLogoImg" src="" alt="Logo partenaire"></div>
+                                        <div class="title-row"><div class="main-title" id="displayTitle">Music Festival</div><div class="ticket-numbers"><span>N° <span id="displayTicketNumber">001</span></span><span>Série <span id="displaySerialNumber">EX123AB7</span></span></div></div>
+                                        <div class="details-list" id="detailsList"><div class="detail-row"><span class="label">Type</span><span class="value" id="displayType">Evènement</span></div><div class="detail-row"><span class="label">Statut</span><span class="value"><span id="displayStatus" class="status-badge-display default">Premium</span></span></div><div class="detail-row"><span class="label">Lieu</span><span class="value" id="displayLocation">France, Paris</span></div><div class="detail-row"><span class="label">Prix</span><span class="value mt" id="displayPrice">5000 XOF</span></div></div>
+                                        <div class="dates-section"><div class="date-item"><span class="small-label">Début :</span><span class="date-value" id="displayStart">03 Juin 2025</span></div><div class="date-item"><span class="small-label">Fin :</span><span class="date-value" id="displayEnd">03 Juin 2025</span></div><div class="date-item"><span class="small-label">Heure :</span><span class="date-value" id="displayTime">20:00</span></div></div>
                                         <div class="event-description" id="displayDescription">Soirée exceptionnelle - Tenue chic exigée</div>
                                         <div class="id-section"><span class="small-label">#ID : </span><span class="id-value" id="displayIdBottom"></span></div>
                                         <div class="secure-mention">BILLET NUMÉRIQUE SÉCURISÉ</div>
@@ -1070,47 +977,34 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="form-group" style="margin-top:20px;">
-                            <label class="form-label"><i class="fas fa-cog"></i> Qualité JPEG</label>
-                            <input type="range" id="qualitySlider" min="0.5" max="1.0" step="0.1" value="0.9">
-                            <div style="display:flex; justify-content:space-between;"><span>Standard</span><span id="qualityValue">90%</span><span>Haute</span></div>
-                        </div>
-                        <div class="action-buttons">
-                            <button id="previewBtn" class="btn btn-secondary"><i class="fas fa-sync-alt"></i> Actualiser</button>
-                            <button id="downloadSingleBtn" class="btn btn-primary"><i class="fas fa-file-download"></i> Télécharger</button>
-                        </div>
+                        <div class="form-group" style="margin-top:20px;"><label class="form-label"><i class="fas fa-cog"></i> Qualité JPEG</label><input type="range" id="qualitySlider" min="0.5" max="1.0" step="0.1" value="0.9"><div style="display:flex; justify-content:space-between;"><span>Standard</span><span id="qualityValue">90%</span><span>Haute</span></div></div>
+                        <div class="action-buttons"><button id="previewBtn" class="btn btn-secondary"><i class="fas fa-sync-alt"></i> Actualiser</button><button id="downloadSingleBtn" class="btn btn-primary"><i class="fas fa-file-download"></i> Télécharger</button></div>
                     </div>
                 </div>
             </section>
 
+            <!-- Page Statistiques refondue -->
             <section class="page" id="statsPage">
-                <div class="page-header">
-                    <h2 class="page-title"><i class="fas fa-chart-line"></i> Statistiques détaillées</h2>
+                <div class="page-header"><h2 class="page-title"><i class="fas fa-chart-line"></i> Statistiques avancées</h2><p>Analyse détaillée de votre activité</p></div>
+                <div class="dashboard-stats">
+                    <div class="stat-card-modern"><div class="card-icon"><i class="fas fa-ticket-alt"></i></div><h4>Tickets générés</h4><div class="stat-number" id="statTotalTickets">0</div></div>
+                    <div class="stat-card-modern"><div class="card-icon"><i class="fas fa-money-bill-wave"></i></div><h4>Montant total (FCFA)</h4><div class="stat-number" id="statTotalAmount">0</div></div>
+                    <div class="stat-card-modern"><div class="card-icon"><i class="fas fa-hourglass-half"></i></div><h4>Temps total traitement</h4><div class="stat-number" id="statTotalTime">0 s</div></div>
+                    <div class="stat-card-modern"><div class="card-icon"><i class="fas fa-chart-simple"></i></div><h4>Nombre d'opérations</h4><div class="stat-number" id="statOperationsCount">0</div></div>
                 </div>
-                <div class="stats-cards-row">
-                    <div class="stat-card"><i class="fas fa-coins"></i><h3 id="statsTotalAmount">0 FCFA</h3><p>Montant total</p></div>
-                    <div class="stat-card">
-                        <i class="fas fa-chart-bar"></i><h3>Répartition</h3>
-                        <div>Premium: <span id="statsPremium">0</span> · Standard: <span id="statsStandard">0</span> · VIP: <span id="statsVip">0</span> · Autre: <span id="statsOther">0</span></div>
-                    </div>
+                <div class="charts-container">
+                    <div class="chart-box"><h3><i class="fas fa-chart-pie"></i> Répartition par statut</h3><canvas id="statusPieChart" width="400" height="300"></canvas></div>
+                    <div class="chart-box"><h3><i class="fas fa-chart-line"></i> Évolution du montant généré</h3><canvas id="revenueLineChart" width="400" height="300"></canvas></div>
                 </div>
             </section>
 
+            <!-- Page Paramètres améliorée -->
             <section class="page" id="settingsPage">
-                <div class="page-header">
-                    <h2 class="page-title"><i class="fas fa-database"></i> Stockage & informations</h2>
-                </div>
-                <div class="storage-info">
-                    <div class="storage-card">
-                        <h4><i class="fas fa-hdd"></i> Espace utilisé</h4>
-                        <p><i class="fas fa-database"></i> <strong id="storageSize">Calcul...</strong></p>
-                        <p><i class="fas fa-ticket-alt"></i> <span id="storageCount">0</span> tickets enregistrés</p>
-                    </div>
-                    <div class="contact-info">
-                        <h4><i class="fas fa-address-card"></i> Profile</h4>
-                        <p><i class="fas fa-user"></i> <strong>NexTicket Solutions</strong></p>
-                        <p><small>Version 2.0</small></p>
-                    </div>
+                <div class="page-header"><h2 class="page-title"><i class="fas fa-database"></i> Gestion & stockage</h2><p>Informations et actions sur les données</p></div>
+                <div class="settings-grid">
+                    <div class="settings-card"><h3><i class="fas fa-hdd"></i> Espace de stockage</h3><div class="settings-info-row"><span><i class="fas fa-database"></i> Taille utilisée</span><span><strong id="storageSize">Calcul...</strong></span></div><div class="settings-info-row"><span><i class="fas fa-ticket-alt"></i> Tickets en base</span><span><strong id="storageCount">0</strong></span></div><div class="settings-info-row"><span><i class="fas fa-clock"></i> Dernière activité</span><span><strong id="lastActivity">--</strong></span></div></div>
+                    <div class="settings-card"><h3><i class="fas fa-cogs"></i> Actions</h3><div class="settings-actions"><button id="exportDataBtnSettings" class="btn btn-success"><i class="fas fa-file-export"></i> Exporter JSON</button><button id="clearDataBtnSettings" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Effacer tout</button><button id="refreshStatsBtn" class="btn btn-primary"><i class="fas fa-sync-alt"></i> Rafraîchir</button></div><div class="version-badge"><i class="fas fa-code-branch"></i> Version 2.1 - Pro</div></div>
+                    <div class="settings-card"><h3><i class="fas fa-info-circle"></i> À propos</h3><p><i class="fas fa-building"></i> <strong>NexTicket Solutions</strong></p><p><i class="fas fa-envelope"></i> support@nexticket.com</p><p><i class="fas fa-globe"></i> www.nexticket.com</p><p><i class="fas fa-shield-alt"></i> Génération sécurisée de tickets</p></div>
                 </div>
             </section>
         </main>
@@ -1118,17 +1012,7 @@
 </div>
 
 <div id="alertsContainer"></div>
-<div class="modal-overlay" id="confirmModal">
-    <div class="modal">
-        <i class="fas fa-exclamation-triangle" id="modalIcon"></i>
-        <h3 id="modalTitle">Confirmation</h3>
-        <p id="modalMessage">Voulez-vous vraiment effacer toutes les données ?</p>
-        <div class="modal-actions">
-            <button class="confirm-btn" id="modalConfirm">Confirmer</button>
-            <button class="cancel-btn" id="modalCancel">Annuler</button>
-        </div>
-    </div>
-</div>
+<div class="modal-overlay" id="confirmModal"><div class="modal"><i class="fas fa-exclamation-triangle" id="modalIcon"></i><h3 id="modalTitle">Confirmation</h3><p id="modalMessage">Voulez-vous vraiment effacer toutes les données ?</p><div class="modal-actions"><button class="confirm-btn" id="modalConfirm">Confirmer</button><button class="cancel-btn" id="modalCancel">Annuler</button></div></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -1138,6 +1022,7 @@
 <script type="module">
     import { openDB, saveOperation, getAllOperations, clearAllOperations } from './js/database.js';
 
+    // Récupération des éléments DOM
     const getElem = (id) => document.getElementById(id);
     const qrUpload = getElem('qrUpload');
     const qrUploadArea = getElem('qrUploadArea');
@@ -1222,21 +1107,31 @@
     const stampColor = getElem('stampColor');
     const dividerColor = getElem('dividerColor');
     const ticketLeftDivider = getElem('ticketLeftDivider');
-    const stampLeft = getElem('stampLeft');
     const stampRight = getElem('stampRight');
+    // Nouveaux éléments
+    const statTotalTickets = getElem('statTotalTickets');
+    const statTotalAmount = getElem('statTotalAmount');
+    const statTotalTime = getElem('statTotalTime');
+    const statOperationsCount = getElem('statOperationsCount');
+    const lastActivitySpan = getElem('lastActivity');
+    const exportDataBtnSettings = getElem('exportDataBtnSettings');
+    const clearDataBtnSettings = getElem('clearDataBtnSettings');
+    const refreshStatsBtn = getElem('refreshStatsBtn');
 
     let qrFiles = [];
-    let allProcessedImages = [];      // Accumule les tickets du lot EN COURS uniquement
+    let allProcessedImages = [];
     let currentBatchLimit = null;
     let currentMode = 'single';
     let batchResults = [];
     let totalTickets = 0;
     let totalRevenue = 0;
+    let totalProcessingTimeMs = 0;
     let statusCount = { Premium: 0, Standard: 0, VIP: 0, Autre: 0 };
     const DEFAULT_BG_IMAGE = './images/ticket_backgroun.jpg';
-    let chartInstance = null;
     let defaultId = null;
-    let globalTicketCounter = 0;      // Compteur CONTINU entre les lots
+    let globalTicketCounter = 0;
+    let statusPieChart = null;
+    let revenueLineChart = null;
 
     function celebrate() {
         const duration = 2000;
@@ -1248,30 +1143,47 @@
             if (Date.now() < end) requestAnimationFrame(frame);
         })();
     }
-
+    
     try { await openDB(); console.log('DB ouverte'); } catch(e) { console.error('Erreur DB', e); }
 
     async function loadStatsFromDB() {
         try {
             const ops = await getAllOperations();
-            totalTickets = 0; totalRevenue = 0;
+            totalTickets = 0; totalRevenue = 0; totalProcessingTimeMs = 0;
             statusCount = { Premium: 0, Standard: 0, VIP: 0, Autre: 0 };
+            let lastDate = null;
             ops.forEach(op => {
                 totalTickets += op.count || 0;
                 totalRevenue += op.totalAmount || 0;
+                totalProcessingTimeMs += op.processingTimeMs || 0;
                 if (op.statusBreakdown) {
                     statusCount.Premium += op.statusBreakdown.Premium || 0;
                     statusCount.Standard += op.statusBreakdown.Standard || 0;
                     statusCount.VIP += op.statusBreakdown.VIP || 0;
                     statusCount.Autre += op.statusBreakdown.Autre || 0;
                 }
+                if (op.date && (!lastDate || op.date > lastDate)) lastDate = op.date;
             });
             updateStatsDisplay();
             updateStorageInfo(ops);
-            updateChart(ops);
+            updateCharts(ops);
+            if (statTotalTickets) statTotalTickets.textContent = totalTickets;
+            if (statTotalAmount) statTotalAmount.textContent = totalRevenue.toLocaleString() + ' FCFA';
+            if (statTotalTime) statTotalTime.textContent = formatDuration(totalProcessingTimeMs);
+            if (statOperationsCount) statOperationsCount.textContent = ops.length;
+            if (lastActivitySpan && lastDate) lastActivitySpan.textContent = new Date(lastDate).toLocaleString();
         } catch(e) { console.error(e); }
     }
-    await loadStatsFromDB();
+
+    function formatDuration(ms) {
+        if (ms < 1000) return ms + ' ms';
+        const seconds = Math.floor(ms / 1000);
+        if (seconds < 60) return seconds + ' s';
+        const minutes = Math.floor(seconds / 60);
+        const hrs = Math.floor(minutes / 60);
+        if (hrs > 0) return hrs + ' h ' + (minutes % 60) + ' min';
+        return minutes + ' min ' + (seconds % 60) + ' s';
+    }
 
     function updateStatsDisplay() {
         if (totalProcessedEl) totalProcessedEl.textContent = totalTickets;
@@ -1297,23 +1209,30 @@
         return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + ['Bytes','KB','MB','GB','TB'][i];
     }
 
-    function updateChart(ops) {
-        const last7Days = [];
-        const today = new Date();
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date(today);
-            d.setDate(d.getDate() - i);
-            last7Days.push(d.toISOString().split('T')[0]);
+    function updateCharts(ops) {
+        const ctxPie = document.getElementById('statusPieChart')?.getContext('2d');
+        if (ctxPie) {
+            const pieData = [statusCount.Premium, statusCount.Standard, statusCount.VIP, statusCount.Autre];
+            const labels = ['Premium', 'Standard', 'VIP', 'Autre'];
+            if (statusPieChart) statusPieChart.destroy();
+            statusPieChart = new Chart(ctxPie, {
+                type: 'pie',
+                data: { labels, datasets: [{ data: pieData, backgroundColor: ['#f59e0b', '#6c757d', '#9b59b6', '#3b82f6'] }] },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
         }
-        const counts = last7Days.map(date => ops.filter(op => op.date && op.date.startsWith(date)).reduce((s, op) => s + (op.count || 0), 0));
-        const ctx = document.getElementById('ticketsChart')?.getContext('2d');
-        if (!ctx) return;
-        if (chartInstance) chartInstance.destroy();
-        chartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: { labels: last7Days.map(d => d.slice(5)), datasets: [{ label: 'Tickets générés', data: counts, backgroundColor: '#60a5fa', borderColor: '#2563eb', borderWidth: 1 }] },
-            options: { responsive: true, animation: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-        });
+        const ctxLine = document.getElementById('revenueLineChart')?.getContext('2d');
+        if (ctxLine) {
+            const opsSorted = [...ops].sort((a,b) => new Date(a.date) - new Date(b.date));
+            const dates = opsSorted.map(op => new Date(op.date).toLocaleDateString());
+            const revenues = opsSorted.map(op => op.totalAmount || 0);
+            if (revenueLineChart) revenueLineChart.destroy();
+            revenueLineChart = new Chart(ctxLine, {
+                type: 'line',
+                data: { labels: dates, datasets: [{ label: 'Montant (FCFA)', data: revenues, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.1)', fill: true, tension: 0.3 }] },
+                options: { responsive: true, plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.raw.toLocaleString()} FCFA` } } } }
+            });
+        }
     }
 
     function applyTextColors() {
@@ -1338,10 +1257,6 @@
     function applyStampAndDividerColors() {
         const stampColorVal = stampColor ? stampColor.value : '#1e3a8a';
         const dividerColorVal = dividerColor ? dividerColor.value : '#ffffff';
-        if (stampLeft) {
-            stampLeft.style.color = stampColorVal;
-            stampLeft.style.borderColor = stampColorVal;
-        }
         if (stampRight) {
             stampRight.style.color = stampColorVal;
             stampRight.style.borderColor = stampColorVal;
@@ -1543,6 +1458,7 @@
         singleModeBtn.addEventListener('click', () => { currentMode='single'; updateModeDisplay('single'); resetFileSelection(); });
         batchModeBtn.addEventListener('click', () => { currentMode='batch'; updateModeDisplay('batch'); resetFileSelection(); });
     }
+
     function updateModeDisplay(mode) {
         if (!singleModeBtn || !batchModeBtn) return;
         singleModeBtn.classList.toggle('active', mode==='single');
@@ -1567,6 +1483,7 @@
         }
         if (downloadAllBtn) downloadAllBtn.innerHTML = mode==='single' ? '<i class="fas fa-download"></i> Télécharger' : '<i class="fas fa-file-archive"></i> Télécharger ZIP';
     }
+
     if (batchButtons.length) {
         batchButtons.forEach(btn => btn.addEventListener('click', function() {
             batchButtons.forEach(b => b.classList.remove('active'));
@@ -1580,19 +1497,15 @@
         if (fileList) fileList.innerHTML = '';
         if (qrUpload) qrUpload.value = '';
         if (processBtn) processBtn.disabled = true;
-        // Ne pas toucher à allProcessedImages ici (géré ailleurs)
         if (!defaultId) defaultId = generateUniqueId();
         if (idDisplay) idDisplay.innerHTML = `<i class="fas fa-id-card" style="color:var(--success);"></i> ID: <strong>${defaultId}</strong>`;
         if (currentIdEl) currentIdEl.textContent = defaultId;
         if (displayIdBottom) displayIdBottom.innerText = defaultId;
         if (displayIdLeft) displayIdLeft.innerText = defaultId;
         updateQRCodeFromData();
-        
-        // Utiliser le compteur global pour afficher le prochain numéro de ticket
         const nextTicketNumber = String(globalTicketCounter + 1).padStart(3, '0');
         if (displayTicketNumber) displayTicketNumber.innerText = nextTicketNumber;
         if (displayTicketNumberLeft) displayTicketNumberLeft.innerText = nextTicketNumber;
-        
         if (displaySerialNumber) displaySerialNumber.innerText = generateSerial();
         if (displaySerialNumberLeft) displaySerialNumberLeft.innerText = displaySerialNumber ? displaySerialNumber.innerText : '';
         if (progressContainer) progressContainer.style.display = 'none';
@@ -1643,7 +1556,6 @@
         }
         qrFiles = [];
         if (fileList) fileList.innerHTML = '';
-        
         for (let idx = 0; idx < files.length; idx++) {
             const f = files[idx];
             let id = extractIdFromFilename(f.name);
@@ -1652,7 +1564,6 @@
             div.className = 'file-item';
             div.innerHTML = `<div class="file-name"><i class="fas fa-qrcode"></i> ${f.name}</div><div class="extracted-id">${id}</div>`;
             if (fileList) fileList.appendChild(div);
-            
             try {
                 const highResDataUrl = await resizeImageToDataURL(f, 300, 300);
                 qrFiles.push({ file: f, id, index: idx, highResDataUrl });
@@ -1661,7 +1572,6 @@
                 qrFiles.push({ file: f, id, index: idx, highResDataUrl: null });
             }
         }
-        
         if (qrFiles.length) {
             if (processBtn) processBtn.disabled = false;
             const first = qrFiles[0];
@@ -1669,7 +1579,6 @@
             if (currentIdEl) currentIdEl.textContent = first.id;
             if (displayIdBottom) displayIdBottom.innerText = first.id;
             if (displayIdLeft) displayIdLeft.innerText = first.id;
-            
             const srcToUse = first.highResDataUrl || (await new Promise(res => {
                 const r = new FileReader();
                 r.onload = e => res(e.target.result);
@@ -1677,12 +1586,9 @@
             }));
             if (qrCodeImg) qrCodeImg.src = srcToUse;
             if (miniQrCodeImg) miniQrCodeImg.src = srcToUse;
-            
-            // Mettre à jour l'aperçu avec le prochain numéro de ticket
             const nextTicketNumber = String(globalTicketCounter + 1).padStart(3, '0');
             if (displayTicketNumber) displayTicketNumber.innerText = nextTicketNumber;
             if (displayTicketNumberLeft) displayTicketNumberLeft.innerText = nextTicketNumber;
-            
             if (currentMode==='batch' && batchSizeEl) batchSizeEl.textContent = `${qrFiles.length} / ${currentBatchLimit || '∞'}`;
         } else {
             resetFileSelection();
@@ -1712,10 +1618,8 @@
                         reader.readAsDataURL(qrFile.file);
                     });
                 }
-                
                 if (qrCodeImg) qrCodeImg.src = qrImageSrc;
                 if (miniQrCodeImg) miniQrCodeImg.src = qrImageSrc;
-                
                 await new Promise(r => requestAnimationFrame(r));
                 const dataUrl = await captureTicketImage(4);
                 if (dataUrl) {
@@ -1738,111 +1642,6 @@
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = seconds % 60;
         return `${minutes} min ${remainingSeconds} s`;
-    }
-
-    // ========== BOUTON TRAITER ==========
-    if (processBtn) {
-        processBtn.addEventListener('click', async () => {
-            if (!qrFiles.length) return showAlert('error','Aucun fichier','Chargez des QR codes');
-
-            // 🛑 Vérifie qu'aucun lot précédent n'est en attente de téléchargement
-            if (allProcessedImages.length > 0) {
-                showAlert('warning', 'Lot précédent non téléchargé', 
-                          'Veuillez d\'abord télécharger le lot en cours (bouton Télécharger) ou cliquez sur Nouveau pour recommencer.');
-                return;
-            }
-
-            setButtonLoading(processBtn, true);
-            const currentBatchImages = [];
-            batchResults = [];
-            if (progressContainer) progressContainer.style.display = 'block';
-            if (progressBar) progressBar.style.width = '0%';
-            if (progressText) progressText.textContent = 'Démarrage...';
-            
-            const total = qrFiles.length;
-            let completed = 0, errors = 0;
-            const price = extractPriceValue(priceInput ? priceInput.value : '');
-            const statusVal = statusInput ? statusInput.value : 'Premium';
-            
-            const startTime = Date.now();
-            const startIndex = globalTicketCounter;  // Début du compteur pour ce lot
-            
-            for (let i = 0; i < total; i++) {
-                try {
-                    // Utiliser l'index global pour la numérotation
-                    const res = await processQRCode(qrFiles[i], startIndex + i);
-                    currentBatchImages.push(res);
-                    completed++;
-                    batchResults.push({ originalName: res.originalName, id: res.id });
-                    
-                    if (i === total - 1) {
-                        if (displayIdBottom) displayIdBottom.innerText = res.id;
-                        if (displayIdLeft) displayIdLeft.innerText = res.id;
-                        if (currentIdEl) currentIdEl.textContent = res.id;
-                    }
-                } catch (e) { 
-                    errors++; 
-                }
-                
-                const now = Date.now();
-                const percent = Math.round((completed / total) * 100);
-                if (progressBar) progressBar.style.width = `${percent}%`;
-                
-                const elapsedTotal = now - startTime;
-                const avgTimePerTicket = elapsedTotal / completed;
-                const remainingTickets = total - i - 1;
-                const estimatedRemainingMs = avgTimePerTicket * remainingTickets;
-                
-                if (progressText) {
-                    const elapsedStr = formatTime(elapsedTotal);
-                    const remainStr = formatTime(estimatedRemainingMs);
-                    const speed = (completed / (elapsedTotal / 1000)).toFixed(2);
-                    progressText.innerHTML = `${completed}/${total} (${percent}%) | Écoulé: ${elapsedStr} | Restant: ~${remainStr} | Vitesse: ${speed} t/s`;
-                }
-                
-                if (i % 5 === 0) {
-                    await new Promise(resolve => setTimeout(resolve, 0));
-                }
-            }
-            
-            const endTime = Date.now();
-            const totalDuration = endTime - startTime;
-            
-            // Mise à jour du compteur global après le lot
-            globalTicketCounter += completed;
-            
-            // Stocker uniquement le lot en cours
-            allProcessedImages = currentBatchImages;
-            
-            totalTickets += completed;
-            totalRevenue += completed * price;
-            if (statusVal.toLowerCase().includes('vvip') || statusVal.toLowerCase().includes('vip')) statusCount.VIP += completed;
-            else if (statusVal.toLowerCase().includes('premium')) statusCount.Premium += completed;
-            else if (statusVal.toLowerCase().includes('standard')) statusCount.Standard += completed;
-            else statusCount.Autre += completed;
-            updateStatsDisplay();
-            await saveOperation({
-                date: new Date().toISOString(),
-                mode: currentMode,
-                count: completed,
-                totalAmount: completed * price,
-                statusBreakdown: { ...statusCount },
-                pricePerTicket: price,
-                statusValue: statusVal
-            });
-            if (currentMode==='batch' && batchResults.length) showBatchResults();
-            showAlert(errors ? 'warning' : 'success', errors ? 'Partiel' : 'Succès', 
-                `${completed} tickets générés en ${formatTime(totalDuration)}. ${errors} erreurs.`);
-            if (downloadAllBtn) downloadAllBtn.disabled = false; // activer le téléchargement
-            if (progressText) progressText.innerHTML = `Terminé: ${completed} succès, ${errors} erreurs. Durée totale: ${formatTime(totalDuration)}.`;
-            setButtonLoading(processBtn, false);
-            await loadStatsFromDB();
-            
-            // Mettre à jour l'aperçu avec le prochain numéro après traitement
-            const nextTicketNumber = String(globalTicketCounter + 1).padStart(3, '0');
-            if (displayTicketNumber) displayTicketNumber.innerText = nextTicketNumber;
-            if (displayTicketNumberLeft) displayTicketNumberLeft.innerText = nextTicketNumber;
-        });
     }
 
     function showBatchResults() {
@@ -1868,79 +1667,136 @@
         if (showBtn) showBtn.style.display = 'flex';
     }
 
-    if (downloadSingleBtn) {
-        downloadSingleBtn.addEventListener('click', async () => {
-            setButtonLoading(downloadSingleBtn, true);
-            const dataUrl = await captureTicketImage(4);
-            if (dataUrl) {
-                const fileName = `ticket_${Date.now()}.jpg`;
-                downloadImage(dataUrl, fileName);
-                celebrate();
-            } else { showAlert('error', 'Erreur', 'Impossible de capturer le ticket'); }
-            setButtonLoading(downloadSingleBtn, false);
+    // Bouton Traiter (avec accumulation du temps)
+    if (processBtn) {
+        processBtn.addEventListener('click', async () => {
+            if (!qrFiles.length) return showAlert('error','Aucun fichier','Chargez des QR codes');
+            if (allProcessedImages.length > 0) {
+                showAlert('warning', 'Lot précédent non téléchargé', 'Veuillez d\'abord télécharger le lot en cours.');
+                return;
+            }
+            setButtonLoading(processBtn, true);
+            const currentBatchImages = [];
+            batchResults = [];
+            if (progressContainer) progressContainer.style.display = 'block';
+            if (progressBar) progressBar.style.width = '0%';
+            if (progressText) progressText.textContent = 'Démarrage...';
+            const total = qrFiles.length;
+            let completed = 0, errors = 0;
+            const price = extractPriceValue(priceInput ? priceInput.value : '');
+            const statusVal = statusInput ? statusInput.value : 'Premium';
+            const startTime = Date.now();
+            const startIndex = globalTicketCounter;
+            for (let i = 0; i < total; i++) {
+                try {
+                    const res = await processQRCode(qrFiles[i], startIndex + i);
+                    currentBatchImages.push(res);
+                    completed++;
+                    batchResults.push({ originalName: res.originalName, id: res.id });
+                    if (i === total - 1) {
+                        if (displayIdBottom) displayIdBottom.innerText = res.id;
+                        if (displayIdLeft) displayIdLeft.innerText = res.id;
+                        if (currentIdEl) currentIdEl.textContent = res.id;
+                    }
+                } catch (e) { errors++; }
+                const percent = Math.round((completed / total) * 100);
+                if (progressBar) progressBar.style.width = `${percent}%`;
+                if (progressText) {
+                    const elapsed = Date.now() - startTime;
+                    progressText.innerHTML = `${completed}/${total} (${percent}%) | Écoulé: ${formatTime(elapsed)}`;
+                }
+                await new Promise(r => setTimeout(r, 0));
+            }
+            const endTime = Date.now();
+            const totalDuration = endTime - startTime;
+            globalTicketCounter += completed;
+            allProcessedImages = currentBatchImages;
+            totalTickets += completed;
+            totalRevenue += completed * price;
+            totalProcessingTimeMs += totalDuration;
+            if (statusVal.toLowerCase().includes('vvip') || statusVal.toLowerCase().includes('vip')) statusCount.VIP += completed;
+            else if (statusVal.toLowerCase().includes('premium')) statusCount.Premium += completed;
+            else if (statusVal.toLowerCase().includes('standard')) statusCount.Standard += completed;
+            else statusCount.Autre += completed;
+            updateStatsDisplay();
+            await saveOperation({
+                date: new Date().toISOString(),
+                mode: currentMode,
+                count: completed,
+                totalAmount: completed * price,
+                statusBreakdown: { ...statusCount },
+                pricePerTicket: price,
+                statusValue: statusVal,
+                processingTimeMs: totalDuration
+            });
+            if (currentMode==='batch' && batchResults.length) showBatchResults();
+            showAlert(errors ? 'warning' : 'success', errors ? 'Partiel' : 'Succès', `${completed} tickets générés en ${formatTime(totalDuration)}.`);
+            if (downloadAllBtn) downloadAllBtn.disabled = false;
+            if (progressText) progressText.innerHTML = `Terminé: ${completed} succès, ${errors} erreurs. Durée: ${formatTime(totalDuration)}.`;
+            setButtonLoading(processBtn, false);
+            await loadStatsFromDB();
+            const nextTicketNumber = String(globalTicketCounter + 1).padStart(3, '0');
+            if (displayTicketNumber) displayTicketNumber.innerText = nextTicketNumber;
+            if (displayTicketNumberLeft) displayTicketNumberLeft.innerText = nextTicketNumber;
         });
     }
 
-    // ========== BOUTON TÉLÉCHARGER (ZIP) ==========
+    // Télécharger
     if (downloadAllBtn) {
         downloadAllBtn.addEventListener('click', async () => {
             if (!allProcessedImages.length) return showAlert('error','Aucune image','Aucun ticket généré à télécharger.');
             setButtonLoading(downloadAllBtn, true);
             try {
                 if (currentMode === 'single' && allProcessedImages.length === 1) {
-                    downloadImage(allProcessedImages[0].dataUrl, allProcessedImages[0].fileName);
+                    const a = document.createElement('a');
+                    a.href = allProcessedImages[0].dataUrl;
+                    a.download = allProcessedImages[0].fileName;
+                    a.click();
                 } else {
                     const zip = new JSZip();
                     const folder = zip.folder('tickets');
                     allProcessedImages.forEach(img => {
                         const data = img.dataUrl.split(',')[1];
-                        folder.file(img.fileName, b64toBlob(data, 'image/jpeg'));
+                        const byteChars = atob(data);
+                        const byteNumbers = new Array(byteChars.length);
+                        for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+                        const byteArray = new Uint8Array(byteNumbers);
+                        folder.file(img.fileName, new Blob([byteArray], { type: 'image/jpeg' }));
                     });
                     const blob = await zip.generateAsync({ type: 'blob' });
-                    // 🎯 Le nom du ZIP reflète le total cumulé (globalTicketCounter)
                     saveAs(blob, `ticket_lot_${globalTicketCounter}.zip`);
                 }
                 celebrate();
-
-                // 🧹 Libération de la mémoire après téléchargement réussi
                 allProcessedImages = [];
                 if (downloadAllBtn) downloadAllBtn.disabled = true;
-                showAlert('success', 'Mémoire libérée', 
-                    'Le lot a été téléchargé. Vous pouvez charger de nouveaux QR codes pour le prochain lot.');
-
-            } catch (e) {
-                showAlert('error','Erreur ZIP',e.message);
-            } finally {
-                setButtonLoading(downloadAllBtn, false);
-            }
+                showAlert('success', 'Mémoire libérée', 'Lot téléchargé avec succès.');
+            } catch (e) { showAlert('error','Erreur ZIP',e.message); }
+            finally { setButtonLoading(downloadAllBtn, false); }
         });
     }
 
-    function b64toBlob(b64, type) {
-        const bytes = atob(b64), arr = [];
-        for (let i=0; i<bytes.length; i+=512) {
-            const slice = bytes.slice(i,i+512);
-            const nums = new Array(slice.length);
-            for (let j=0; j<slice.length; j++) nums[j] = slice.charCodeAt(j);
-            arr.push(new Uint8Array(nums));
-        }
-        return new Blob(arr, { type });
-    }
-
-    function downloadImage(dataUrl, name) {
-        const a = document.createElement('a');
-        a.href = dataUrl;
-        a.download = name;
-        a.click();
+    if (downloadSingleBtn) {
+        downloadSingleBtn.addEventListener('click', async () => {
+            setButtonLoading(downloadSingleBtn, true);
+            const dataUrl = await captureTicketImage(4);
+            if (dataUrl) {
+                const a = document.createElement('a');
+                a.href = dataUrl;
+                a.download = `ticket_${Date.now()}.jpg`;
+                a.click();
+                celebrate();
+            } else { showAlert('error', 'Erreur', 'Impossible de capturer le ticket'); }
+            setButtonLoading(downloadSingleBtn, false);
+        });
     }
 
     if (resetBtn) {
         resetBtn.addEventListener('click', () => {
-            qrFiles = []; 
-            allProcessedImages = [];   // Vider l'accumulation
+            qrFiles = [];
+            allProcessedImages = [];
             batchResults = [];
             defaultId = generateUniqueId();
-            globalTicketCounter = 0;   // Remise à zéro du compteur global
+            globalTicketCounter = 0;
             resetFileSelection();
             loadStatsFromDB();
             currentMode = 'single';
@@ -2023,12 +1879,12 @@
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         const target = document.getElementById(pageId);
         if (target) target.classList.add('active');
-        document.querySelectorAll('.sidebar-nav .nav-btn, .side-menu .nav-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.side-menu .nav-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll(`[data-page="${pageId}"]`).forEach(btn => btn.classList.add('active'));
         if (pageId === 'statsPage' || pageId === 'settingsPage') loadStatsFromDB();
     }
 
-    document.querySelectorAll('.sidebar-nav .nav-btn, .side-menu .nav-btn').forEach(btn => {
+    document.querySelectorAll('.side-menu .nav-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const page = btn.dataset.page;
             if (page) switchPage(page);
@@ -2050,11 +1906,15 @@
     }
 
     if (refreshBtn) refreshBtn.addEventListener('click', () => { loadStatsFromDB(); showAlert('info','Rafraîchi','Statistiques mises à jour'); });
+    if (exportDataBtnSettings) exportDataBtnSettings.addEventListener('click', () => exportDataBtn.click());
+    if (clearDataBtnSettings) clearDataBtnSettings.addEventListener('click', () => clearDataBtn.click());
+    if (refreshStatsBtn) refreshStatsBtn.addEventListener('click', () => loadStatsFromDB());
 
     initModes();
     defaultId = generateUniqueId();
     resetFileSelection();
     updateTicketDisplay();
+    loadStatsFromDB();
     showAlert('info','Bienvenue','NexTicket est prêt');
 </script>
 </body>
