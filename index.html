@@ -1014,10 +1014,22 @@
 <div id="alertsContainer"></div>
 <div class="modal-overlay" id="confirmModal"><div class="modal"><i class="fas fa-exclamation-triangle" id="modalIcon"></i><h3 id="modalTitle">Confirmation</h3><p id="modalMessage">Voulez-vous vraiment effacer toutes les données ?</p><div class="modal-actions"><button class="confirm-btn" id="modalConfirm">Confirmer</button><button class="cancel-btn" id="modalCancel">Annuler</button></div></div></div>
 
+<!-- Nouvelle modale pour le succès du téléchargement -->
+<div class="modal-overlay" id="successModal">
+    <div class="modal">
+        <i class="fas fa-check-circle" style="color: var(--color-success); font-size: 3rem; margin-bottom: 1rem;"></i>
+        <h3>Téléchargement réussi</h3>
+        <p id="successMessage">Le téléchargement est terminé.</p>
+        <div class="modal-actions">
+            <button class="btn-primary" id="successOkBtn" style="flex:1;">OK</button>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
+<!-- La ligne ci-dessous a été supprimée (canvas-confetti) -->
 
 <script type="module">
     import { openDB, saveOperation, getAllOperations, clearAllOperations } from './js/database.js';
@@ -1117,6 +1129,10 @@
     const exportDataBtnSettings = getElem('exportDataBtnSettings');
     const clearDataBtnSettings = getElem('clearDataBtnSettings');
     const refreshStatsBtn = getElem('refreshStatsBtn');
+    // Nouveaux éléments pour la modale de succès
+    const successModalOverlay = getElem('successModal');
+    const successMessageEl = getElem('successMessage');
+    const successOkBtn = getElem('successOkBtn');
 
     let qrFiles = [];
     let allProcessedImages = [];
@@ -1133,17 +1149,8 @@
     let statusPieChart = null;
     let revenueLineChart = null;
 
-    function celebrate() {
-        const duration = 2000;
-        const end = Date.now() + duration;
-        const colors = ['#0a1f44', '#2d9cdb', '#27ae60', '#e67e22', '#9b59b6', '#8B0000'];
-        (function frame() {
-            confetti({ particleCount: 7, angle: 60, spread: 55, origin: { x: 0 }, colors });
-            confetti({ particleCount: 7, angle: 120, spread: 55, origin: { x: 1 }, colors });
-            if (Date.now() < end) requestAnimationFrame(frame);
-        })();
-    }
-    
+    // La fonction celebrate a été supprimée et remplacée par un pop-up alert stylé
+
     try { await openDB(); console.log('DB ouverte'); } catch(e) { console.error('Erreur DB', e); }
 
     async function loadStatsFromDB() {
@@ -1450,6 +1457,22 @@
         a.style.borderLeftColor = type==='success'?'#10b981': type==='error'?'#ef4444':'#f59e0b';
         if (alertsContainer) alertsContainer.appendChild(a);
         setTimeout(() => a.remove(), 4000);
+    }
+
+    function showSuccessModal(message) {
+        if (successMessageEl) successMessageEl.textContent = message;
+        if (successModalOverlay) successModalOverlay.style.display = 'flex';
+    }
+
+    if (successOkBtn) {
+        successOkBtn.addEventListener('click', () => {
+            if (successModalOverlay) successModalOverlay.style.display = 'none';
+        });
+    }
+    if (successModalOverlay) {
+        successModalOverlay.addEventListener('click', (e) => {
+            if (e.target === successModalOverlay) successModalOverlay.style.display = 'none';
+        });
     }
 
     function initModes() {
@@ -1766,7 +1789,8 @@
                     const blob = await zip.generateAsync({ type: 'blob' });
                     saveAs(blob, `ticket_lot_${globalTicketCounter}.zip`);
                 }
-                celebrate();
+                // Pop-up stylé au lieu des confettis
+                showSuccessModal('Téléchargement du lot terminé avec succès !');
                 allProcessedImages = [];
                 if (downloadAllBtn) downloadAllBtn.disabled = true;
                 showAlert('success', 'Mémoire libérée', 'Lot téléchargé avec succès.');
@@ -1784,7 +1808,8 @@
                 a.href = dataUrl;
                 a.download = `ticket_${Date.now()}.jpg`;
                 a.click();
-                celebrate();
+                // Pop-up stylé au lieu des confettis
+                showSuccessModal('Le ticket a été téléchargé avec succès.');
             } else { showAlert('error', 'Erreur', 'Impossible de capturer le ticket'); }
             setButtonLoading(downloadSingleBtn, false);
         });
