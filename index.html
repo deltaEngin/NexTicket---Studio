@@ -12,8 +12,13 @@
     <title>NexTicket · Générateur professionnel</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Police signature manuscrite -->
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Nouvelle police élégante -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
     <style>
         :root {
             --color-primary: #2563eb;
@@ -544,6 +549,15 @@
             flex-shrink: 0;
         }
         .ticket-card * { font-family: 'Montserrat', sans-serif; }
+        /* Police alternative pour tout le ticket */
+        .ticket-card.font-playfair,
+        .ticket-card.font-playfair * {
+            font-family: 'Playfair Display', serif;
+        }
+        /* Toujours garder la signature en Caveat */
+        .signature-text {
+            font-family: 'Caveat', cursive !important;
+        }
         .ticket-body { display: flex; min-height: 280px; }
         .ticket-left {
             flex: 0 0 200px;
@@ -563,16 +577,31 @@
             margin-top: 15px;
         }
         .qr-container img {
-            width: 120px;
-            height: 120px;
+            width: 100px;
+            height: 100px;
             object-fit: contain;
             background: white;
             margin-bottom: 8px;
             image-rendering: crisp-edges;
         }
+        /* Signature texte */
+        .signature-container {
+            width: 100%;
+            margin-top: 12px;
+            text-align: center;
+            align-self: center;
+        }
+        .signature-text {
+            font-family: 'Caveat', cursive;
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.2;
+            display: inline-block;
+            word-break: break-word;
+        }
         .partner-logo-container {
             position: absolute;
-            bottom: 78px;
+            bottom: 85px;
             right: 20px;
             max-width: 120px;
             max-height: 60px;
@@ -615,7 +644,7 @@
        }
         .mini-qr {
             position: absolute;
-            bottom: 155px;
+            bottom: 170px;
             right: 20px;
             width: 168px;
             height: 168px;
@@ -632,6 +661,12 @@
             font-size: 26px;
             font-weight: 900;
             line-height: 1.2;
+        }
+        .main-title.italic {
+            font-style: italic;
+        }
+        .main-title.signature-font {
+            font-family: 'Caveat', cursive;
         }
         .ticket-numbers {
             display: flex;
@@ -948,6 +983,41 @@
                             <div><label class="form-label"><i class="fas fa-stamp"></i> Couleur tampon</label><input type="color" id="stampColor" value="#1e3a8a" style="width:100%; height:38px;"></div>
                             <div><label class="form-label"><i class="fas fa-grip-lines-vertical"></i> Couleur séparateur</label><input type="color" id="dividerColor" value="#ffffff" style="width:100%; height:38px;"></div>
                             <div><label class="form-label"><i class="fas fa-handshake"></i> Logo partenaire</label><input type="file" id="partnerLogoUpload" accept="image/*" style="width:100%;"><button id="resetPartnerLogoBtn" class="btn btn-sm btn-secondary" style="margin-top:5px;">Supprimer logo</button></div>
+                            
+                            <!-- Nouveau champ signature texte -->
+                            <div class="full-width">
+                                <label class="form-label"><i class="fas fa-signature"></i> Signature</label>
+                                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                                    <input type="text" id="signatureText" class="form-control" value="John Doe" style="flex:1;">
+                                    <button id="resetSignatureBtn" class="btn btn-sm btn-secondary" style="margin-top:0;">Réinitialiser</button>
+                                </div>
+                            </div>
+                            <div><label class="form-label"><i class="fas fa-palette"></i> Couleur signature</label><input type="color" id="signatureColor" value="#000000" style="width:100%; height:38px;"></div>
+
+                            <!-- Options titre -->
+                            <div style="grid-column: span 2; display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" id="useSignatureFontForTitle" style="transform:scale(1.2);">
+                                <label for="useSignatureFontForTitle" class="form-label" style="margin-bottom:0;">Utiliser la police signature pour le titre</label>
+                            </div>
+                            <div style="grid-column: span 1; display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" id="titleItalic" style="transform:scale(1.2);">
+                                <label for="titleItalic" class="form-label" style="margin-bottom:0;">Titre en italique</label>
+                            </div>
+
+                            <!-- Nouveau choix de police pour le ticket -->
+                            <div style="grid-column: span 2; display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" id="usePlayfairFont" style="transform:scale(1.2);">
+                                <label for="usePlayfairFont" class="form-label" style="margin-bottom:0;">Police élégante (Playfair Display)</label>
+                            </div>
+
+                            <!-- Options dégradé et fond -->
+                            <div style="grid-column: span 2; display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" id="useGradientBg" style="transform:scale(1.2);">
+                                <label for="useGradientBg" class="form-label" style="margin-bottom:0;">Utiliser un dégradé de fond</label>
+                            </div>
+                            <div><label class="form-label"><i class="fas fa-paint-brush"></i> Couleur début</label><input type="color" id="gradientStart" value="#000000" style="width:100%; height:38px;"></div>
+                            <div><label class="form-label"><i class="fas fa-paint-roller"></i> Couleur fin</label><input type="color" id="gradientEnd" value="#1e3a8a" style="width:100%; height:38px;"></div>
+                            <div><label class="form-label"><i class="fas fa-fill"></i> Fond de la carte</label><input type="color" id="ticketBgColor" value="#ffffff" style="width:100%; height:38px;"><span style="font-size:10px;">Évite les contours blancs</span></div>
                         </div>
                         <div class="form-group"><label class="form-label"><i class="fas fa-id-card"></i> ID extrait</label><div id="idDisplay" class="phone-display"><i class="fas fa-sync-alt"></i> En attente...</div></div>
                         <div class="form-group"><label class="form-label"><i class="fas fa-qrcode"></i> QR Codes</label><div class="file-upload" id="qrUploadArea"><i class="fas fa-cloud-upload-alt"></i><p>Glissez-déposez vos QR codes</p><p style="font-size:14px;">ou cliquez pour sélectionner</p><input type="file" id="qrUpload" accept="image/*" multiple style="display:none;"><button class="btn btn-primary" style="max-width:200px; margin:0 auto;"><i class="fas fa-folder-open"></i> Parcourir</button></div><div id="fileList" class="file-list"></div><div class="progress-container" id="progressContainer"><div class="progress-bar" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
@@ -962,6 +1032,10 @@
                                     <div class="ticket-left" id="ticketLeftDivider">
                                         <div class="qr-container"><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=TICKET" alt="QR" id="qrCodeImg"><span class="ticket-pass">Ticket Pass</span></div>
                                         <div class="stub-info"><div><span class="label">N°</span><span class="value" id="displayTicketNumberLeft">001</span></div><div><span class="label">Série</span><span class="value" id="displaySerialNumberLeft">EX123AB7</span></div><div><span class="label">ID</span><span class="value" id="displayIdLeft">--</span></div></div>
+                                        <!-- Signature texte -->
+                                        <div class="signature-container" id="signatureContainer">
+                                            <span id="signatureDisplay" class="signature-text">John Doe</span>
+                                        </div>
                                     </div>
                                     <div class="ticket-right">
                                         <div class="mini-qr"><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=TICKET" alt="mini QR" id="miniQrCodeImg"></div>
@@ -1026,10 +1100,12 @@
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-<!-- La ligne ci-dessous a été supprimée (canvas-confetti) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js">
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js">
+</script>
 
 <script type="module">
     import { openDB, saveOperation, getAllOperations, clearAllOperations } from './js/database.js';
@@ -1120,7 +1196,21 @@
     const dividerColor = getElem('dividerColor');
     const ticketLeftDivider = getElem('ticketLeftDivider');
     const stampRight = getElem('stampRight');
-    // Nouveaux éléments
+    // Nouveaux éléments signature texte
+    const signatureTextInput = getElem('signatureText');
+    const signatureColorInput = getElem('signatureColor');
+    const signatureDisplay = getElem('signatureDisplay');
+    const resetSignatureBtn = getElem('resetSignatureBtn');
+    // Nouveaux contrôles titre
+    const useSignatureFontForTitle = getElem('useSignatureFontForTitle');
+    const titleItalic = getElem('titleItalic');
+    // Nouveau contrôle police ticket
+    const usePlayfairFont = getElem('usePlayfairFont');
+    // Autres éléments inchangés
+    const useGradientBg = getElem('useGradientBg');
+    const gradientStart = getElem('gradientStart');
+    const gradientEnd = getElem('gradientEnd');
+    const ticketBgColor = getElem('ticketBgColor');
     const statTotalTickets = getElem('statTotalTickets');
     const statTotalAmount = getElem('statTotalAmount');
     const statTotalTime = getElem('statTotalTime');
@@ -1129,7 +1219,6 @@
     const exportDataBtnSettings = getElem('exportDataBtnSettings');
     const clearDataBtnSettings = getElem('clearDataBtnSettings');
     const refreshStatsBtn = getElem('refreshStatsBtn');
-    // Nouveaux éléments pour la modale de succès
     const successModalOverlay = getElem('successModal');
     const successMessageEl = getElem('successMessage');
     const successOkBtn = getElem('successOkBtn');
@@ -1144,14 +1233,94 @@
     let totalProcessingTimeMs = 0;
     let statusCount = { Premium: 0, Standard: 0, VIP: 0, Autre: 0 };
     const DEFAULT_BG_IMAGE = './images/ticket_backgroun.jpg';
+    let currentBgImageUrl = null;
     let defaultId = null;
     let globalTicketCounter = 0;
     let statusPieChart = null;
     let revenueLineChart = null;
 
-    // La fonction celebrate a été supprimée et remplacée par un pop-up alert stylé
-
     try { await openDB(); console.log('DB ouverte'); } catch(e) { console.error('Erreur DB', e); }
+
+    // Mise à jour du fond selon les options
+    function updateTicketBackground() {
+        if (!ticketCard) return;
+        if (useGradientBg && useGradientBg.checked) {
+            const start = gradientStart ? gradientStart.value : '#000000';
+            const end = gradientEnd ? gradientEnd.value : '#1e3a8a';
+            ticketCard.style.backgroundImage = 'none';
+            ticketCard.style.background = `linear-gradient(135deg, ${start}, ${end})`;
+        } else {
+            if (currentBgImageUrl) {
+                ticketCard.style.background = '';
+                ticketCard.style.backgroundImage = `url('${currentBgImageUrl}')`;
+            } else {
+                ticketCard.style.background = '';
+                ticketCard.style.backgroundImage = `url('${DEFAULT_BG_IMAGE}')`;
+            }
+        }
+        if (ticketBgColor) {
+            ticketCard.style.backgroundColor = ticketBgColor.value;
+        }
+    }
+
+    // Gestion signature texte
+    function updateSignatureDisplay() {
+        if (signatureTextInput && signatureDisplay) {
+            signatureDisplay.textContent = signatureTextInput.value || 'Signature';
+        }
+        if (signatureColorInput && signatureDisplay) {
+            signatureDisplay.style.color = signatureColorInput.value;
+        }
+    }
+
+    if (signatureTextInput) signatureTextInput.addEventListener('input', updateSignatureDisplay);
+    if (signatureColorInput) signatureColorInput.addEventListener('input', updateSignatureDisplay);
+    if (resetSignatureBtn) {
+        resetSignatureBtn.addEventListener('click', () => {
+            if (signatureTextInput) signatureTextInput.value = 'John Doe';
+            if (signatureColorInput) signatureColorInput.value = '#000000';
+            updateSignatureDisplay();
+        });
+    }
+    // Appel initial
+    updateSignatureDisplay();
+
+    // Gestion du style du titre
+    function updateTitleStyle() {
+        if (!displayTitle) return;
+        // Réinitialiser les classes
+        displayTitle.classList.remove('signature-font', 'italic');
+        if (useSignatureFontForTitle && useSignatureFontForTitle.checked) {
+            displayTitle.classList.add('signature-font');
+        }
+        if (titleItalic && titleItalic.checked) {
+            displayTitle.classList.add('italic');
+        }
+    }
+
+    if (useSignatureFontForTitle) useSignatureFontForTitle.addEventListener('change', updateTitleStyle);
+    if (titleItalic) titleItalic.addEventListener('change', updateTitleStyle);
+    // Appel initial
+    updateTitleStyle();
+
+    // Gestion de la police du ticket
+    function updateTicketFont() {
+        if (!ticketCard) return;
+        if (usePlayfairFont && usePlayfairFont.checked) {
+            ticketCard.classList.add('font-playfair');
+        } else {
+            ticketCard.classList.remove('font-playfair');
+        }
+    }
+
+    if (usePlayfairFont) usePlayfairFont.addEventListener('change', updateTicketFont);
+    // Appel initial
+    updateTicketFont();
+
+    if (useGradientBg) useGradientBg.addEventListener('change', updateTicketBackground);
+    if (gradientStart) gradientStart.addEventListener('input', updateTicketBackground);
+    if (gradientEnd) gradientEnd.addEventListener('input', updateTicketBackground);
+    if (ticketBgColor) ticketBgColor.addEventListener('input', updateTicketBackground);
 
     async function loadStatsFromDB() {
         try {
@@ -1272,7 +1441,7 @@
             ticketLeftDivider.style.borderRightColor = dividerColorVal;
         }
     }
-
+    
     function updateTicketDisplay() {
         const title = eventTitle ? eventTitle.value.trim() : "Music Festival";
         const type = eventType ? eventType.value.trim() : "Evènement";
@@ -1300,11 +1469,12 @@
         }
         if (displayPrice) displayPrice.innerText = price;
         if (displayDescription) displayDescription.innerText = desc || '';
-
         if (detailsList) detailsList.style.backgroundColor = detailsBgColor ? detailsBgColor.value : '#ffffff';
-
         applyTextColors();
         applyStampAndDividerColors();
+        updateTicketBackground();
+        updateTitleStyle();
+        updateTicketFont();
     }
 
     function formatDateFr(d) {
@@ -1369,7 +1539,12 @@
             const file = e.target.files[0];
             if (file && ticketCard) {
                 const reader = new FileReader();
-                reader.onload = (ev) => { ticketCard.style.backgroundImage = `url('${ev.target.result}')`; };
+                reader.onload = (ev) => { 
+                    const imageUrl = ev.target.result;
+                    ticketCard.style.backgroundImage = `url('${imageUrl}')`;
+                    currentBgImageUrl = imageUrl;
+                    if (useGradientBg) useGradientBg.checked = false;
+                };
                 reader.readAsDataURL(file);
             }
         });
@@ -1378,6 +1553,9 @@
         resetBackgroundBtn.addEventListener('click', () => {
             if (ticketCard) ticketCard.style.backgroundImage = `url('${DEFAULT_BG_IMAGE}')`;
             if (backgroundUpload) backgroundUpload.value = '';
+            currentBgImageUrl = null;
+            if (useGradientBg) useGradientBg.checked = false;
+            updateTicketBackground();
         });
     }
 
@@ -1430,11 +1608,56 @@
         });
     }
 
-    async function captureTicketImage(scale=3) {
+    function waitForAllImagesLoaded() {
+        const images = ticketCard ? ticketCard.querySelectorAll('img') : [];
+        const promises = Array.from(images).map(img => {
+            return new Promise((resolve) => {
+                if (img.complete && img.naturalWidth > 0) {
+                    resolve();
+                } else {
+                    img.onload = () => resolve();
+                    img.onerror = () => resolve();
+                    setTimeout(resolve, 5000);
+                }
+            });
+        });
+        return Promise.all(promises);
+    }
+
+    // ⚡ Capture d'image corrigée pour éviter les chevauchements de texte
+    async function captureTicketImage(scale = 3) {
         try {
-            const canvas = await html2canvas(ticketCard, { scale, backgroundColor:'#fff', useCORS:true });
+            // Attendre les polices web
+            await document.fonts.ready;
+            await document.fonts.load('1em Montserrat');
+            await document.fonts.load('1em Caveat');
+            await document.fonts.load('1em Playfair Display');
+
+            await waitForAllImagesLoaded();
+
+            // Reflow forcé pour appliquer tous les styles avant capture
+            ticketCard.style.display = 'none';
+            ticketCard.offsetHeight; // lecture force le reflow
+            ticketCard.style.display = '';
+
+            // Double requestAnimationFrame pour terminer le layout
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+            // Délai supplémentaire pour laisser le navigateur stabiliser le rendu
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            const bgColor = ticketBgColor ? ticketBgColor.value : '#ffffff';
+            const canvas = await html2canvas(ticketCard, {
+                scale,
+                backgroundColor: bgColor,
+                useCORS: true,
+                logging: false,
+                foreignObjectRendering: false   // meilleure compatibilité polices
+            });
             return canvas.toDataURL('image/jpeg', parseFloat(qualitySlider ? qualitySlider.value : '0.9'));
-        } catch { return null; }
+        } catch (err) {
+            console.error('Erreur capture ticket:', err);
+            return null;
+        }
     }
 
     function setButtonLoading(btn, loading) {
@@ -1643,12 +1866,17 @@
                 }
                 if (qrCodeImg) qrCodeImg.src = qrImageSrc;
                 if (miniQrCodeImg) miniQrCodeImg.src = qrImageSrc;
-                await new Promise(r => requestAnimationFrame(r));
+
+                // Mise à jour du display avant capture
+                updateTicketDisplay();
+
                 const dataUrl = await captureTicketImage(4);
                 if (dataUrl) {
                     const fileName = qrFile.file.name.replace(/\.[^/.]+$/, '') + '_ticket.jpg';
                     resolve({ dataUrl, id: qrFile.id, fileName, originalName: qrFile.file.name, ticketNumber, serialNumber });
-                } else reject('Capture error');
+                } else {
+                    reject('Capture error');
+                }
             } catch (err) { reject(err); }
         });
     }
@@ -1690,7 +1918,7 @@
         if (showBtn) showBtn.style.display = 'flex';
     }
 
-    // Bouton Traiter (avec accumulation du temps)
+    // Bouton Traiter
     if (processBtn) {
         processBtn.addEventListener('click', async () => {
             if (!qrFiles.length) return showAlert('error','Aucun fichier','Chargez des QR codes');
@@ -1789,7 +2017,6 @@
                     const blob = await zip.generateAsync({ type: 'blob' });
                     saveAs(blob, `ticket_lot_${globalTicketCounter}.zip`);
                 }
-                // Pop-up stylé au lieu des confettis
                 showSuccessModal('Téléchargement du lot terminé avec succès !');
                 allProcessedImages = [];
                 if (downloadAllBtn) downloadAllBtn.disabled = true;
@@ -1802,13 +2029,14 @@
     if (downloadSingleBtn) {
         downloadSingleBtn.addEventListener('click', async () => {
             setButtonLoading(downloadSingleBtn, true);
+            // Mise à jour de l'affichage avant capture
+            updateTicketDisplay();
             const dataUrl = await captureTicketImage(4);
             if (dataUrl) {
                 const a = document.createElement('a');
                 a.href = dataUrl;
                 a.download = `ticket_${Date.now()}.jpg`;
                 a.click();
-                // Pop-up stylé au lieu des confettis
                 showSuccessModal('Le ticket a été téléchargé avec succès.');
             } else { showAlert('error', 'Erreur', 'Impossible de capturer le ticket'); }
             setButtonLoading(downloadSingleBtn, false);
@@ -1822,13 +2050,18 @@
             batchResults = [];
             defaultId = generateUniqueId();
             globalTicketCounter = 0;
+            currentBgImageUrl = null;
             resetFileSelection();
             loadStatsFromDB();
             currentMode = 'single';
             updateModeDisplay('single');
             const activeBatch = document.querySelector('.batch-btn[data-limit="200"]');
             if (activeBatch) activeBatch.classList.add('active');
-            if (ticketCard) ticketCard.style.backgroundImage = `url('${DEFAULT_BG_IMAGE}')`;
+            if (ticketCard) {
+                ticketCard.style.backgroundImage = `url('${DEFAULT_BG_IMAGE}')`;
+                if (useGradientBg) useGradientBg.checked = false;
+                updateTicketBackground();
+            }
             if (partnerLogoUpload) partnerLogoUpload.value = '';
             if (partnerLogoContainer) partnerLogoContainer.style.display = 'none';
             if (partnerLogoImg) partnerLogoImg.src = '';
