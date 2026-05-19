@@ -558,16 +558,27 @@
         .signature-text {
             font-family: 'Caveat', cursive !important;
         }
-        .ticket-body { display: flex; min-height: 280px; }
+        .ticket-body { display: flex; min-height: 280px; position: relative; }
         .ticket-left {
             flex: 0 0 200px;
             display: flex;
             flex-direction: column;
             align-items: flex-end;
             padding: 15px 20px 15px 30px;
-            border-right: 1.8px dashed #FFFFFF;
             background: rgba(255,255,255,0.1);
             backdrop-filter: blur(1px);
+        }
+        /* Séparateur vertical court au milieu grâce à un pseudo‑élément */
+        .ticket-body::after {
+            content: '';
+            position: absolute;
+            left: 200px;          /* largeur de .ticket-left */
+            top: 20%;
+            height: 60%;
+            width: 0;
+            border-left: 1.8px dashed var(--divider-color, #ffffff);
+            pointer-events: none;
+            z-index: 1;
         }
         .qr-container {
             display: flex;
@@ -1437,8 +1448,9 @@
             stampRight.style.color = stampColorVal;
             stampRight.style.borderColor = stampColorVal;
         }
-        if (ticketLeftDivider) {
-            ticketLeftDivider.style.borderRightColor = dividerColorVal;
+        // Modification : couleur du séparateur via variable CSS
+        if (ticketCard) {
+            ticketCard.style.setProperty('--divider-color', dividerColorVal);
         }
     }
     
